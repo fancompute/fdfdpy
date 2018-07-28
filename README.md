@@ -37,7 +37,7 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 	
 `b` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  PLEASE NOTE: `b` is exacly the source for `Ax = b`, it is not a current density!.  `b.shape` must be `(Nx,Ny)`.
 
-`fields` is a tuple containing `(Ex, Ey, Ez, Hx, Hy, Hz)`.  Again, depending on the polarization, three out of these terms will be set to `None`.
+`fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
 
 
 ### To Do
