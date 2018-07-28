@@ -90,15 +90,11 @@ def S(l, dw, omega):
 
 
 def create_sfactor(wrange, s, omega, Nw, Nw_pml):
-
     sfactor_array = np.ones(Nw, dtype=np.complex128)
-
     if Nw_pml < 1:
         return sfactor_array
-
     hw = np.diff(wrange)[0]/Nw
     dw = Nw_pml*hw
-
     for i in range(0, Nw):
         if s is 'f':
             if i <= Nw_pml:
@@ -110,7 +106,6 @@ def create_sfactor(wrange, s, omega, Nw, Nw_pml):
                 sfactor_array[i] = S(hw * (Nw_pml - i + 1), dw, omega)
             elif i > Nw - Nw_pml:
                 sfactor_array[i] = S(hw * (i - (Nw - Nw_pml) - 1), dw, omega)
-
     return sfactor_array
 
 def createDws(w, s, dL, N, matrix_format='csc'):
@@ -122,7 +117,6 @@ def createDws(w, s, dL, N, matrix_format='csc'):
     else:
         Ny = 1
         dy = inf
-
     if w is 'x':
         if s is 'f':
             dxf = sp.diags([-1, 1, 1], [0, 1, -Nx+1], shape=(Nx, Nx))
@@ -130,7 +124,6 @@ def createDws(w, s, dL, N, matrix_format='csc'):
         else:
             dxb = sp.diags([1, -1, -1], [0, -1, Nx-1], shape=(Nx, Nx))
             Dws = 1/dx*sp.kron(sp.eye(Ny), dxb, format=matrix_format)
-
     if w is 'y':
         if s is 'f':
             dyf = sp.diags([-1, 1, 1], [0, 1, -Ny+1], shape=(Ny, Ny))
@@ -138,14 +131,13 @@ def createDws(w, s, dL, N, matrix_format='csc'):
         else:
             dyb = sp.diags([1, -1, -1], [0, -1, Ny-1], shape=(Ny, Ny))
             Dws = 1/dy*sp.kron(dyb, sp.eye(Nx), format=matrix_format)
-
     return Dws
 
 
 def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
     M = np.prod(N)
     if np.isscalar(Npml): Npml = np.array([Npml])
-
+		
     if len(N) < 2:
         N = append(N,1)
         Npml = append(Npml,0)
@@ -174,7 +166,6 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
     for j in range(0, Ny):
         Sx_f_2D[:, j] = 1/s_vector_x_f
         Sx_b_2D[:, j] = 1/s_vector_x_b
-
 
     # Reshape the 2D s-factors into a 1D s-array
     Sx_f_vec = np.reshape(Sx_f_2D, (1, M), order='F')
@@ -228,7 +219,6 @@ def solver_direct(A, b, derivs, omega, pol, timing=False):
 			# If source is zero
 			ez = zeros(b.shape)
 		else:
-
 			ez = spl.spsolve(A, b)
 
 		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
