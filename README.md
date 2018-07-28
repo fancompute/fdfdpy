@@ -25,9 +25,9 @@ Also, it creates the relative permittiity and relative permeability arrays `eps_
 
 With the `Fdfd` object initialized (and your permittivity set), we may compute the maxwell operator `A` using the method
 
-	A = FDFD.get_A()
+	A = FDFD.create_A(new_epsilon_r)
 
-This stores `A` in the Fdfd object and optionally returns it to the user.  `A` is a sparse matrix.
+This stores `A` in the Fdfd object and optionally returns it to the user.  `new_epsilon_r` is an optional parameter.
 
 ### Solving for the electromagnetic fields
 
@@ -35,9 +35,9 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 
 	fields = FDFD.solve_fields(b)
 	
-`b` is either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  `b.shape` must be `(Nx,Ny)`.
+`b` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  PLEASE NOTE: `b` is exacly the source for `Ax = b`, it is not a current density!.  `b.shape` must be `(Nx,Ny)`.
 
-`fields` is a tuple containing `(Ex, Ey, Ez, Hx, Hy, Hz)`.  Again, depending on the polarization, three out of these terms will be set to `None`.
+`fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
 
 
 ### To Do
