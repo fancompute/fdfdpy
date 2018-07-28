@@ -25,9 +25,9 @@ Also, it creates the relative permittiity and relative permeability arrays `eps_
 
 With the `Fdfd` object initialized (and your permittivity set), we may compute the maxwell operator `A` using the method
 
-	A = FDFD.get_A()
+	A = FDFD.create_A(new_epsilon_r)
 
-This stores `A` in the Fdfd object and optionally returns it to the user.  `A` is a sparse matrix.
+This stores `A` in the Fdfd object and optionally returns it to the user.  `new_epsilon_r` is an optional parameter.
 
 ### Solving for the electromagnetic fields
 
