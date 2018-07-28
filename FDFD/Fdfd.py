@@ -27,13 +27,20 @@ class Fdfd:
 								timing=False)
 		self.A = A
 		self.derivs = derivs
-
+		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 	def solve_fields(self, b):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
 		
 		(field_X,field_Y,field_Z) = solver_direct(self.A, b, self.derivs, self.omega, self.pol, timing=False)
-
+		if self.pol == 'Hz':
+			self.derivs['Ex'] = field_X
+			self.derivs['Ey'] = field_Y
+			self.derivs['Hz'] = field_Z
+		else:
+			self.derivs['Hx'] = field_X
+			self.derivs['Hy'] = field_Y
+			self.derivs['Ez'] = field_Z
 		return (field_X,field_Y,field_Z)
 
 
