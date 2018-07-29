@@ -31,12 +31,18 @@ It also creates a `mu_r` as `numpy.ones(eps_r.shape)`.
 
 Now, we have everything we need to solve the system for the electromagnetic fields, by running
 
-	fields = FDFD.solve_fields(b)
+	fields = FDFD.solve_fields(b, timing=False)
 	
 `b` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  PLEASE NOTE: `b` is exacly the source for `Ax = b`, it is not a current density!.  `b.shape` must be `(Nx,Ny)`.
 
 `fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
 
+### Requirements
+
+- numpy
+- scipy
+- matplotlib
+- pypardiso
 
 ### To Do
 
