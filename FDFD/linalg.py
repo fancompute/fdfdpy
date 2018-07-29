@@ -1,5 +1,6 @@
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
+import pypardiso as pdo
 import numpy as np
 from time import time
 
@@ -21,7 +22,7 @@ def is_equal(matrix1, matrix2):
 	return (matrix1!=matrix2).nnz==0
 
 
-def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=True, matrix_format='csc', timing=False):
+def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing=False, matrix_format='csc'):
 	
 	N = np.asarray(eps_r.shape)  # Number of mesh cells
 	M = np.prod(N)  # Number of unknowns
@@ -44,8 +45,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=True, matrix_
 		A = A / (omega**2*EPSILON_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 			
 	elif pol == 'Ez':
-		# Note, got rid of grid average.  Not sure if this will screw up AVM
-		
+		# Note, haven't included grid_average function yet
 		if averaging:
 			vector_eps_x = grid_average(EPSILON_0*eps_r, 'x').ravel(order='F')
 			vector_eps_y = grid_average(EPSILON_0*eps_r, 'y').ravel(order='F')
@@ -206,34 +206,57 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 def solver_direct(A, b, derivs, omega, pol, timing=False):
 	(Nx,Ny) = b.shape
 	b = b.ravel(order='F')
-	if timing: 
-		start = time()
 	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
 	if pol == 'Ez':
 		if not b.any():
 			# If source is zero
 			ez = zeros(b.shape)
 		else:
-			ez = spl.spsolve(A, b)
+			# PARADISO TESTS
+			if timing:
+				t = time()
+			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+			b_big = np.array([np.real(b), np.imag(b)]).flatten()
+			ez_big = pdo.spsolve(A_big, b_big)
+			ez = ez_big[:b.size] +1j*ez_big[b.size:]
+			if timing:
+				print('pardiso took {} seconds'.format(time()-t))
+				t = time()			
+			# ez = spl.spsolve(A, b)
+			# if timing:
+			#	print('scipy took {} seconds'.format(time()-t))
+
 		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
 		hy =  1/1j/omega/MU_0 * Dxb.dot(ez)
 		Hx = hx.reshape((Nx, Ny), order='F')
 		Hy = hy.reshape((Nx, Ny), order='F')
 		Ez = ez.reshape((Nx, Ny), order='F')
-		if timing: end = time()
-		if timing: print('Elapsed time for spsolve() is %.4f secs' % (end - start))
 		return (Hx, Hy, Ez)
 	else:
 		if not b.any():
 			# If source is zero
 			hz = zeros(b.shape)
 		else:
-			hz = spl.spsolve(A, b)
+			# PARADISO TESTS
+			if timing:
+				t = time()
+			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+			b_big = np.array([np.real(b), np.imag(b)]).flatten()
+			hz_big = pdo.spsolve(A_big, b_big)
+			hz = hz_big[:b.size] +1j*hz_big[b.size:]
+			if timing:
+				print('pardiso took {} seconds'.format(time()-t))
+				t = time()
+			# hhz = spl.spsolve(A, b)
+			# if timing:
+			#	print('scipy took {} seconds'.format(time()-t))
 		ex = -1/1j/omega/EPSILON_0 * Dyb.dot(hz)
 		ey =  1/1j/omega/EPSILON_0 * Dxb.dot(hz)
 		Ex = ex.reshape((Nx, Ny), order='F')
 		Ey = ey.reshape((Nx, Ny), order='F')
 		Hz = hz.reshape((Nx, Ny), order='F')
-		if timing: end = time()
-		if timing: print('Elapsed time for spsolve() is %.4f secs' % (end - start))
 		return (Ex, Ey, Hz)		
