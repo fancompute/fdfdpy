@@ -7,8 +7,8 @@ from time import time
 from FDFD.constants import *
 
 def dL(N, xrange, yrange=None):
-
 	# solves for the grid spacing
+	
 	if yrange is None:
 		L = np.array([np.diff(xrange)[0]])  # Simulation domain lengths
 	else:
@@ -19,11 +19,13 @@ def dL(N, xrange, yrange=None):
 
 def is_equal(matrix1, matrix2):
 	# checks if two sparse matrices are equal
+
 	return (matrix1!=matrix2).nnz==0
 
 
 def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing=False, matrix_format='csc'):
-	
+	# makes the A matrix
+
 	N = np.asarray(eps_r.shape)  # Number of mesh cells
 	M = np.prod(N)  # Number of unknowns
 	
@@ -87,15 +89,21 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing
 
 
 def sig_w(l, dw, m=4, lnR=-12):
+	# helper for S()
+
 	sig_max = -(m+1)*lnR/(2*ETA_0*dw)
 	return sig_max*(l/dw)**m
 
 
 def S(l, dw, omega):
+	# helper for create_sfactor()
+
 	return 1-1j*sig_w(l, dw)/(omega*EPSILON_0)
 
 
 def create_sfactor(wrange, s, omega, Nw, Nw_pml):
+	# used to help construct the S matrices for the PML creation
+
 	sfactor_array = np.ones(Nw, dtype=np.complex128)
 	if Nw_pml < 1:
 		return sfactor_array
@@ -114,7 +122,10 @@ def create_sfactor(wrange, s, omega, Nw, Nw_pml):
 				sfactor_array[i] = S(hw * (i - (Nw - Nw_pml) - 1), dw, omega)
 	return sfactor_array
 
+
 def createDws(w, s, dL, N, matrix_format='csc'):
+	# creates the derivative matrices
+
 	Nx = N[0]
 	dx = dL[0]
 	if len(N) is not 1:
@@ -141,6 +152,8 @@ def createDws(w, s, dL, N, matrix_format='csc'):
 
 
 def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
+	# creates S matrices for the PML creation
+
 	M = np.prod(N)
 	if np.isscalar(Npml): Npml = np.array([Npml])
 	if len(N) < 2:
@@ -187,23 +200,30 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
 
 
 def unpack_derivs(derivs):
+	# takes derivs dictionary and returns tuple for convenience
+
 	Dyb = derivs['Dyb']
 	Dxb = derivs['Dxb']
 	Dxf = derivs['Dxf']
 	Dyf = derivs['Dyf']
 	return (Dyb, Dxb, Dxf, Dyf)
 
+
 def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
+	# solves for the eigenmodes of A
+
 	if timing:
 		start = time()
-	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
 	(values, vectors) = spl.eigs(A, k=Neigs, sigma=guess_value, v0=guess_vector, which='LM')
 	if timing:
 		end = time()
 		print('Elapsed time for eigs() is %.4f secs' % (end - start))
 	return (values, vectors)
 
+
 def solver_direct(A, b, derivs, omega, pol, timing=False):
+	# solves for the electromagnetic fields of A given source b
+
 	(Nx,Ny) = b.shape
 	b = b.ravel(order='F')
 	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
