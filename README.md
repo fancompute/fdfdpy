@@ -12,16 +12,16 @@ The `Fdfd` class is initialized as
 
 	FDFD = Fdfd(omega, eps_r, dl, NPML, pol)
 
-- `omega` : the angular frequency in units of $2\pi/s$
+- `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
-- `dl` : the spatial grid size in units of $m$
-- `NPML` : defines number of PML grids [# on x borders, # on y borders]
-- `pol` : polarization, one of {'Hz','Ez'} where $\hat{z}$ is the transverse field.
+- `dl` : the spatial grid size in units of meters
+- `NPML` : defines number of PML grids `[# on x borders, # on y borders]`
+- `pol` : polarization, one of `{'Hz','Ez'}` where `z` is the transverse field.
 
 Creating a new Fdfd object solves for:
 
-- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of $m$
-- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of $m$
+- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of meters
+- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of meters
 - `A` : the Maxwell operator, which is used later to solve for the E&M fields.
 - `derivs` : dictionary storing the derivative operators.
 
@@ -45,6 +45,6 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
 - [ ] Allow for nonlinear A, where an electric field may be supplied when solving for the fields.
-- [ ] Parallel sparse matrix solvers
+- [ ] Parallel sparse matrix solvers (see `pardiso` branch)
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 
