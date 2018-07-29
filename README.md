@@ -45,6 +45,7 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 - pypardiso
 
 ### To Do
+- [ ] Dope plotting methods.
 - [x] Parallel sparse matrix solvers (see `pardiso` branch).
 - [ ] Make pardiso wrapper like complex symmetric matrices.
 - [ ] Double check maxwell's equations for TM and TE field constructions.
