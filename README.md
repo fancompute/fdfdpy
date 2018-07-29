@@ -45,12 +45,12 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 - pypardiso
 
 ### To Do
-
-- [ ] Normalize the `A` matrix.
+- [x] Parallel sparse matrix solvers (see `pardiso` branch).
+- [ ] Make pardiso wrapper like complex symmetric matrices.
 - [ ] Double check maxwell's equations for TM and TE field constructions.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
 - [ ] Allow for nonlinear A, where an electric field may be supplied when solving for the fields.
-- [ ] Parallel sparse matrix solvers (see `pardiso` branch)
+- [x] Normalize the `A` matrix.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 
