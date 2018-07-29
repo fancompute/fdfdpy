@@ -12,16 +12,16 @@ The `Fdfd` class is initialized as
 
 	FDFD = Fdfd(omega, eps_r, dl, NPML, pol)
 
-- `omega` : the angular frequency in units of <img src="https://rawgit.com/fancompute/fdfdpy_OO/master/svgs/b426396c46b1822721455b4a1314ab4f.svg?invert_in_darkmode" align=middle width=34.103986949999985pt height=24.65753399999998pt/>
+- `omega` : the angular frequency in units of $2\pi/s$
 - `eps_r` : a numpy array specifying the relative permittivity distribution
-- `dl` : the spatial grid size in units of <img src="https://rawgit.com/fancompute/fdfdpy_OO/master/svgs/0e51a2dede42189d77627c4d742822c3.svg?invert_in_darkmode" align=middle width=14.433101099999991pt height=14.15524440000002pt/>
+- `dl` : the spatial grid size in units of $m$
 - `NPML` : defines number of PML grids [# on x borders, # on y borders]
-- `pol` : polarization, one of {'Hz','Ez'} where <img src="https://rawgit.com/fancompute/fdfdpy_OO/master/svgs/049d08d713c56f2563a52e05e448200d.svg?invert_in_darkmode" align=middle width=9.206699699999989pt height=22.831056599999986pt/> is the transverse field.
+- `pol` : polarization, one of {'Hz','Ez'} where $\hat{z}$ is the transverse field.
 
 Creating a new Fdfd object solves for:
 
-- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of <img src="https://rawgit.com/fancompute/fdfdpy_OO/master/svgs/0e51a2dede42189d77627c4d742822c3.svg?invert_in_darkmode" align=middle width=14.433101099999991pt height=14.15524440000002pt/>
-- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of <img src="https://rawgit.com/fancompute/fdfdpy_OO/master/svgs/0e51a2dede42189d77627c4d742822c3.svg?invert_in_darkmode" align=middle width=14.433101099999991pt height=14.15524440000002pt/>
+- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of $m$
+- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of $m$
 - `A` : the Maxwell operator, which is used later to solve for the E&M fields.
 - `derivs` : dictionary storing the derivative operators.
 
