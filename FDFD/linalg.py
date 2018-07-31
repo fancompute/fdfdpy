@@ -1,7 +1,11 @@
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
-# from pypardiso import PyPardisoSolver
+
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyMKL')))
 from pyMKL import pardisoSolver
+
 import numpy as np
 from time import time
 
@@ -171,10 +175,6 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
 	for j in range(0, Ny):
 		Sx_f_2D[:, j] = 1/s_vector_x_f
 		Sx_b_2D[:, j] = 1/s_vector_x_b
-
-	import matplotlib.pyplot as plt
-	plt.figure()
-	plt.pcolormesh(np.real(Sy_f_2D))
 
 	# Reshape the 2D s-factors into a 1D s-array
 	Sx_f_vec = np.reshape(Sx_f_2D, (1, M), order='F')
