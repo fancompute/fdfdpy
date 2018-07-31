@@ -1,6 +1,6 @@
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
-import pypardiso as pdo
+from pypardiso import PyPardisoSolver
 import numpy as np
 from time import time
 
@@ -212,21 +212,13 @@ def solver_direct(A, b, derivs, omega, pol, timing=False):
 			# If source is zero
 			ez = zeros(b.shape)
 		else:
-			# PARADISO TESTS
 			if timing:
 				t = time()
-			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-			b_big = np.array([np.real(b), np.imag(b)]).flatten()
-			ez_big = pdo.spsolve(A_big, b_big)
-			ez = ez_big[:b.size] +1j*ez_big[b.size:]
+			ps = PyPardisoSolver(mtype=3)
+			ez = ps.solve(A, b)
 			if timing:
 				print('pardiso took {} seconds'.format(time()-t))
-				t = time()			
-			ezz = spl.spsolve(A, b)
-			if timing:
-				print('scipy took {} seconds'.format(time()-t))
+				t = time()
 
 		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
 		hy =  1/1j/omega/MU_0 * Dxb.dot(ez)
@@ -242,16 +234,8 @@ def solver_direct(A, b, derivs, omega, pol, timing=False):
 			# PARADISO TESTS
 			if timing:
 				t = time()
-			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-			b_big = np.array([np.real(b), np.imag(b)]).flatten()
-			hz_big = pdo.spsolve(A_big, b_big)
-			hz = hz_big[:b.size] +1j*hz_big[b.size:]
-			if timing:
-				print('pardiso took {} seconds'.format(time()-t))
-				t = time()
-			hhz = spl.spsolve(A, b)
+			ps = PyPardisoSolver(mtype=3)
+			hz = ps.solve(A, b)
 			if timing:
 				print('scipy took {} seconds'.format(time()-t))
 		ex = -1/1j/omega/EPSILON_0 * Dyb.dot(hz)
