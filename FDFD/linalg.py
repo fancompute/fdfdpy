@@ -224,7 +224,7 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 	return (values, vectors)
 
 
-def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso.parts'):
+def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso'):
 	# solves for the electromagnetic fields of A given source b
 	(Nx,Ny) = b.shape
 	b = b.ravel(order='F')
