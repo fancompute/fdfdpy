@@ -1,6 +1,7 @@
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
-from pypardiso import PyPardisoSolver
+# from pypardiso import PyPardisoSolver
+from pyMKL import pardisoSolver
 import numpy as np
 from time import time
 
@@ -171,6 +172,10 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
 		Sx_f_2D[:, j] = 1/s_vector_x_f
 		Sx_b_2D[:, j] = 1/s_vector_x_b
 
+	import matplotlib.pyplot as plt
+	plt.figure()
+	plt.pcolormesh(np.real(Sy_f_2D))
+
 	# Reshape the 2D s-factors into a 1D s-array
 	Sx_f_vec = np.reshape(Sx_f_2D, (1, M), order='F')
 	Sx_b_vec = np.reshape(Sx_b_2D, (1, M), order='F')
@@ -216,15 +221,22 @@ def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso.parts'
 				t = time()
 
 			if solver.lower() == 'pardiso':
-				ps = PyPardisoSolver(mtype=3)
-				ez = ps.solve(A, b)
+				pSolve = pardisoSolver(A, mtype=13)
+				pSolve.run_pardiso(12)
+				ez = pSolve.run_pardiso(33, b)
+				pSolve.clear()
+
 			elif solver.lower() == 'pardiso.parts':
 				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
 				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
 				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
 				b_big = np.array([np.real(b), np.imag(b)]).flatten()
-				ps = PyPardisoSolver()
-				ez_big = ps.solve(A_big, b_big)
+
+				pSolve = pardisoSolver(A_big, mtype=11)
+				pSolve.run_pardiso(12)
+				ez_big = pSolve.run_pardiso(33, b_big)
+				pSolve.clear()
+
 				ez = ez_big[:b.size] +1j*ez_big[b.size:]
 			else:
 				ez = spl.spsolve(A, b)
@@ -248,15 +260,22 @@ def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso.parts'
 				t = time()
 
 			if solver.lower() == 'pardiso':
-				ps = PyPardisoSolver(mtype=3)
-				hz = ps.solve(A, b)
+				pSolve = pardisoSolver(A, mtype=6)
+				pSolve.run_pardiso(12)
+				hz = pSolve.run_pardiso(33, b)
+				pSolve.clear()
+
 			elif solver.lower() == 'pardiso.parts':
 				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
 				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
 				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
 				b_big = np.array([np.real(b), np.imag(b)]).flatten()
-				ps = PyPardisoSolver()
-				hz_big = ps.solve(A_big, b_big)
+
+				pSolve = pardisoSolver(A_big, mtype=11)
+				pSolve.run_pardiso(12)
+				hz_big = pSolve.run_pardiso(33, b_big)
+				pSolve.clear()
+
 				hz = hz_big[:b.size] +1j*hz_big[b.size:]
 			else:
 				hz = spl.spsolve(A, b)
