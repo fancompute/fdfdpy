@@ -29,12 +29,12 @@ class Fdfd:
 		self.derivs = derivs
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
-	def solve_fields(self, b):
+	def solve_fields(self, b, timing=False, solver='pardiso.parts'):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
-
 		b = b.astype(np.complex128)
 
-		(field_X,field_Y,field_Z) = solver_direct(self.A, b, self.derivs, self.omega, self.pol, timing=False)
+		(field_X,field_Y,field_Z) = solver_direct(self.A, b, self.derivs, self.omega, self.pol, timing=timing, solver=solver)
+
 		if self.pol == 'Hz':
 			self.derivs['Ex'] = field_X
 			self.derivs['Ey'] = field_Y
@@ -43,6 +43,7 @@ class Fdfd:
 			self.derivs['Hx'] = field_X
 			self.derivs['Hy'] = field_Y
 			self.derivs['Ez'] = field_Z
+
 		return (field_X,field_Y,field_Z)
 
 

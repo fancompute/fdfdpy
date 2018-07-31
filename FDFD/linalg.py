@@ -1,6 +1,10 @@
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
-import pypardiso as pdo
+import os
+import sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyMKL')))
+from pyMKL import pardisoSolver
+
 import numpy as np
 from time import time
 
@@ -25,7 +29,6 @@ def is_equal(matrix1, matrix2):
 
 def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing=False, matrix_format='csc'):
 	# makes the A matrix
-
 	N = np.asarray(eps_r.shape)  # Number of mesh cells
 	M = np.prod(N)  # Number of unknowns
 	
@@ -221,62 +224,86 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 	return (values, vectors)
 
 
-def solver_direct(A, b, derivs, omega, pol, timing=False):
+def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso.parts'):
 	# solves for the electromagnetic fields of A given source b
-
 	(Nx,Ny) = b.shape
 	b = b.ravel(order='F')
 	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
+
 	if pol == 'Ez':
 		if not b.any():
-			# If source is zero
 			ez = zeros(b.shape)
 		else:
-			# PARADISO TESTS
 			if timing:
 				t = time()
-			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-			b_big = np.array([np.real(b), np.imag(b)]).flatten()
-			ez_big = pdo.spsolve(A_big, b_big)
-			ez = ez_big[:b.size] +1j*ez_big[b.size:]
+
+			if solver.lower() == 'pardiso':
+				pSolve = pardisoSolver(A, mtype=13)
+				pSolve.run_pardiso(12)
+				ez = pSolve.run_pardiso(33, b)
+				pSolve.clear()
+
+			elif solver.lower() == 'pardiso.parts':
+				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+
+				pSolve = pardisoSolver(A_big, mtype=11)
+				pSolve.run_pardiso(12)
+				ez_big = pSolve.run_pardiso(33, b_big)
+				pSolve.clear()
+
+				ez = ez_big[:b.size] +1j*ez_big[b.size:]
+			else:
+				ez = spl.spsolve(A, b)
+
 			if timing:
-				print('pardiso took {} seconds'.format(time()-t))
-				t = time()			
-			# ez = spl.spsolve(A, b)
-			# if timing:
-			#	print('scipy took {} seconds'.format(time()-t))
+				print('Linear system solve took {:.2f} seconds'.format(time()-t))
 
 		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
 		hy =  1/1j/omega/MU_0 * Dxb.dot(ez)
 		Hx = hx.reshape((Nx, Ny), order='F')
 		Hy = hy.reshape((Nx, Ny), order='F')
 		Ez = ez.reshape((Nx, Ny), order='F')
+
 		return (Hx, Hy, Ez)
+
 	else:
 		if not b.any():
-			# If source is zero
 			hz = zeros(b.shape)
 		else:
-			# PARADISO TESTS
 			if timing:
 				t = time()
-			A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-			A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-			A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-			b_big = np.array([np.real(b), np.imag(b)]).flatten()
-			hz_big = pdo.spsolve(A_big, b_big)
-			hz = hz_big[:b.size] +1j*hz_big[b.size:]
+
+			if solver.lower() == 'pardiso':
+				pSolve = pardisoSolver(A, mtype=6)
+				pSolve.run_pardiso(12)
+				hz = pSolve.run_pardiso(33, b)
+				pSolve.clear()
+
+			elif solver.lower() == 'pardiso.parts':
+				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+
+				pSolve = pardisoSolver(A_big, mtype=11)
+				pSolve.run_pardiso(12)
+				hz_big = pSolve.run_pardiso(33, b_big)
+				pSolve.clear()
+
+				hz = hz_big[:b.size] +1j*hz_big[b.size:]
+			else:
+				hz = spl.spsolve(A, b)
+
 			if timing:
-				print('pardiso took {} seconds'.format(time()-t))
-				t = time()
-			# hhz = spl.spsolve(A, b)
-			# if timing:
-			#	print('scipy took {} seconds'.format(time()-t))
+				print('Linear system solve took {:.2f} seconds'.format(time()-t))
+
 		ex = -1/1j/omega/EPSILON_0 * Dyb.dot(hz)
 		ey =  1/1j/omega/EPSILON_0 * Dxb.dot(hz)
 		Ex = ex.reshape((Nx, Ny), order='F')
 		Ey = ey.reshape((Nx, Ny), order='F')
 		Hz = hz.reshape((Nx, Ny), order='F')
+
 		return (Ex, Ey, Hz)		
