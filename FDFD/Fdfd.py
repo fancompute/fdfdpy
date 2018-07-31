@@ -29,6 +29,19 @@ class Fdfd:
 		self.derivs = derivs
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
+
+	def reset_eps(self, new_eps):
+		# sets a new permittivity with the same other parameters and reconstructs a new A
+		
+		self.eps_r = new_eps
+		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol,
+								matrix_format='csc', 
+								timing=False)
+		self.A = A
+		self.derivs = derivs
+		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
+
+
 	def solve_fields(self, b, timing=False, solver='pardiso.parts'):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
 		b = b.astype(np.complex128)
