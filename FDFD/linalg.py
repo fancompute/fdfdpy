@@ -226,6 +226,7 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 
 def solver_direct(A, b, timing=False, solver='pardiso'):
 	# solves linear system of equations
+	
 	b = b.astype(np.complex128)
 	b = b.ravel(order='F')
 
@@ -243,7 +244,7 @@ def solver_direct(A, b, timing=False, solver='pardiso'):
 
 	elif solver.lower() == 'scipy':
 		x = spl.spsolve(A, b)
-		
+
 	else:
 		raise ValueError('Invalid solver choice: {}, options are pardiso or scipy'.format(str(solver)))
 

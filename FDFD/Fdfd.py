@@ -1,5 +1,6 @@
 import numpy as np
-from FDFD.linalg import construct_A, solver_direct, solver_eigs
+from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs
+from FDFD.constants import *
 
 class Fdfd:
 
@@ -48,11 +49,11 @@ class Fdfd:
 		X = solver_direct(self.A, b, timing=timing, solver=solver)
 
 		(Nx,Ny) = b.shape
-		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)	
+		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
 
 		if self.pol == 'Hz':
-			ex = -1/1j/omega/EPSILON_0 * Dyb.dot(X)
-			ey =  1/1j/omega/EPSILON_0 * Dxb.dot(X)
+			ex = -1/1j/self.omega/EPSILON_0 * Dyb.dot(X)
+			ey =  1/1j/self.omega/EPSILON_0 * Dxb.dot(X)
 
 			Ex = ex.reshape((Nx, Ny), order='F')
 			Ey = ey.reshape((Nx, Ny), order='F')
@@ -65,8 +66,8 @@ class Fdfd:
 			return (Ex, Ey ,Hz)
 
 		elif self.pol == 'Ez':
-			hx = -1/1j/omega/MU_0 * Dyb.dot(X)
-			hy =  1/1j/omega/MU_0 * Dxb.dot(X)
+			hx = -1/1j/self.omega/MU_0 * Dyb.dot(X)
+			hy =  1/1j/self.omega/MU_0 * Dxb.dot(X)
 
 			Hx = hx.reshape((Nx, Ny), order='F')
 			Hy = hy.reshape((Nx, Ny), order='F')
