@@ -203,44 +203,71 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 		print('Elapsed time for eigs() is %.4f secs' % (end - start))
 	return (values, vectors)
 
-def solver_direct(A, b, derivs, omega, pol, timing=False):
+def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso.parts'):
 	(Nx,Ny) = b.shape
 	b = b.ravel(order='F')
 	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
+
 	if pol == 'Ez':
 		if not b.any():
-			# If source is zero
 			ez = zeros(b.shape)
 		else:
 			if timing:
 				t = time()
-			ps = PyPardisoSolver(mtype=3)
-			ez = ps.solve(A, b)
+
+			if solver.lower() == 'pardiso':
+				ps = PyPardisoSolver(mtype=3)
+				ez = ps.solve(A, b)
+			elif solver.lower() == 'pardiso.parts':
+				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+				ps = PyPardisoSolver()
+				ez_big = ps.solve(A_big, b_big)
+				ez = ez_big[:b.size] +1j*ez_big[b.size:]
+			else:
+				ez = spl.spsolve(A, b)
+
 			if timing:
-				print('pardiso took {} seconds'.format(time()-t))
-				t = time()
+				print('Linear system solve took {:.2f} seconds'.format(time()-t))
 
 		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
 		hy =  1/1j/omega/MU_0 * Dxb.dot(ez)
 		Hx = hx.reshape((Nx, Ny), order='F')
 		Hy = hy.reshape((Nx, Ny), order='F')
 		Ez = ez.reshape((Nx, Ny), order='F')
+
 		return (Hx, Hy, Ez)
+
 	else:
 		if not b.any():
-			# If source is zero
 			hz = zeros(b.shape)
 		else:
-			# PARADISO TESTS
 			if timing:
 				t = time()
-			ps = PyPardisoSolver(mtype=3)
-			hz = ps.solve(A, b)
+
+			if solver.lower() == 'pardiso':
+				ps = PyPardisoSolver(mtype=3)
+				hz = ps.solve(A, b)
+			elif solver.lower() == 'pardiso.parts':
+				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
+				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
+				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
+				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+				ps = PyPardisoSolver()
+				hz_big = ps.solve(A_big, b_big)
+				hz = hz_big[:b.size] +1j*hz_big[b.size:]
+			else:
+				hz = spl.spsolve(A, b)
+
 			if timing:
-				print('scipy took {} seconds'.format(time()-t))
+				print('Linear system solve took {:.2f} seconds'.format(time()-t))
+
 		ex = -1/1j/omega/EPSILON_0 * Dyb.dot(hz)
 		ey =  1/1j/omega/EPSILON_0 * Dxb.dot(hz)
 		Ex = ex.reshape((Nx, Ny), order='F')
 		Ey = ey.reshape((Nx, Ny), order='F')
 		Hz = hz.reshape((Nx, Ny), order='F')
+
 		return (Ex, Ey, Hz)		
