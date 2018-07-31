@@ -224,86 +224,31 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 	return (values, vectors)
 
 
-def solver_direct(A, b, derivs, omega, pol, timing=False, solver='pardiso'):
-	# solves for the electromagnetic fields of A given source b
-	(Nx,Ny) = b.shape
+def solver_direct(A, b, timing=False, solver='pardiso'):
+	# solves linear system of equations
+	b = b.astype(np.complex128)
 	b = b.ravel(order='F')
-	(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)
 
-	if pol == 'Ez':
-		if not b.any():
-			ez = zeros(b.shape)
-		else:
-			if timing:
-				t = time()
+	if not b.any():
+		return zeros(b.shape)
 
-			if solver.lower() == 'pardiso':
-				pSolve = pardisoSolver(A, mtype=13)
-				pSolve.run_pardiso(12)
-				ez = pSolve.run_pardiso(33, b)
-				pSolve.clear()
+	if timing:
+		t = time()
 
-			elif solver.lower() == 'pardiso.parts':
-				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+	if solver.lower() == 'pardiso':
+		pSolve = pardisoSolver(A, mtype=13) # Set matrix to complex unsymmetric
+		pSolve.run_pardiso(12) # Factorize
+		x = pSolve.run_pardiso(33, b) # Solve
+		pSolve.clear()
 
-				pSolve = pardisoSolver(A_big, mtype=11)
-				pSolve.run_pardiso(12)
-				ez_big = pSolve.run_pardiso(33, b_big)
-				pSolve.clear()
-
-				ez = ez_big[:b.size] +1j*ez_big[b.size:]
-			else:
-				ez = spl.spsolve(A, b)
-
-			if timing:
-				print('Linear system solve took {:.2f} seconds'.format(time()-t))
-
-		hx = -1/1j/omega/MU_0 * Dyb.dot(ez)
-		hy =  1/1j/omega/MU_0 * Dxb.dot(ez)
-		Hx = hx.reshape((Nx, Ny), order='F')
-		Hy = hy.reshape((Nx, Ny), order='F')
-		Ez = ez.reshape((Nx, Ny), order='F')
-
-		return (Hx, Hy, Ez)
-
+	elif solver.lower() == 'scipy':
+		x = spl.spsolve(A, b)
+		
 	else:
-		if not b.any():
-			hz = zeros(b.shape)
-		else:
-			if timing:
-				t = time()
+		raise ValueError('Invalid solver choice: {}, options are pardiso or scipy'.format(str(solver)))
 
-			if solver.lower() == 'pardiso':
-				pSolve = pardisoSolver(A, mtype=6)
-				pSolve.run_pardiso(12)
-				hz = pSolve.run_pardiso(33, b)
-				pSolve.clear()
+	if timing:
+		print('Linear system solve took {:.2f} seconds'.format(time()-t))
 
-			elif solver.lower() == 'pardiso.parts':
-				A_top_row = sp.hstack([np.real(A), -np.imag(A)],format='csr')
-				A_bot_row = sp.hstack([np.imag(A),  np.real(A)],format='csr')
-				A_big = sp.hstack([A_top_row.T, A_bot_row.T]).T
-				b_big = np.array([np.real(b), np.imag(b)]).flatten()
+	return x
 
-				pSolve = pardisoSolver(A_big, mtype=11)
-				pSolve.run_pardiso(12)
-				hz_big = pSolve.run_pardiso(33, b_big)
-				pSolve.clear()
-
-				hz = hz_big[:b.size] +1j*hz_big[b.size:]
-			else:
-				hz = spl.spsolve(A, b)
-
-			if timing:
-				print('Linear system solve took {:.2f} seconds'.format(time()-t))
-
-		ex = -1/1j/omega/EPSILON_0 * Dyb.dot(hz)
-		ey =  1/1j/omega/EPSILON_0 * Dxb.dot(hz)
-		Ex = ex.reshape((Nx, Ny), order='F')
-		Ey = ey.reshape((Nx, Ny), order='F')
-		Hz = hz.reshape((Nx, Ny), order='F')
-
-		return (Ex, Ey, Hz)		

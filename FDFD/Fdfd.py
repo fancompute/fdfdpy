@@ -44,20 +44,42 @@ class Fdfd:
 
 	def solve_fields(self, b, timing=False, solver='pardiso'):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
-		b = b.astype(np.complex128)
 
-		(field_X,field_Y,field_Z) = solver_direct(self.A, b, self.derivs, self.omega, self.pol, timing=timing, solver=solver)
+		X = solver_direct(self.A, b, timing=timing, solver=solver)
+
+		(Nx,Ny) = b.shape
+		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(derivs)	
 
 		if self.pol == 'Hz':
-			self.derivs['Ex'] = field_X
-			self.derivs['Ey'] = field_Y
-			self.derivs['Hz'] = field_Z
-		else:
-			self.derivs['Hx'] = field_X
-			self.derivs['Hy'] = field_Y
-			self.derivs['Ez'] = field_Z
+			ex = -1/1j/omega/EPSILON_0 * Dyb.dot(X)
+			ey =  1/1j/omega/EPSILON_0 * Dxb.dot(X)
 
-		return (field_X,field_Y,field_Z)
+			Ex = ex.reshape((Nx, Ny), order='F')
+			Ey = ey.reshape((Nx, Ny), order='F')
+			Hz = X.reshape((Nx, Ny), order='F')
+
+			self.derivs['Ex'] = Ex
+			self.derivs['Ey'] = Ey
+			self.derivs['Hz'] = Hz
+
+			return (Ex, Ey ,Hz)
+
+		elif self.pol == 'Ez':
+			hx = -1/1j/omega/MU_0 * Dyb.dot(X)
+			hy =  1/1j/omega/MU_0 * Dxb.dot(X)
+
+			Hx = hx.reshape((Nx, Ny), order='F')
+			Hy = hy.reshape((Nx, Ny), order='F')
+			Ez = X.reshape((Nx, Ny), order='F')
+
+			self.derivs['Hx'] = Hx
+			self.derivs['Hy'] = Hy
+			self.derivs['Ez'] = Ez
+
+			return (Hx, Hy, Ez)
+
+		else:
+			raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
 
 	def _check_inputs(self):
