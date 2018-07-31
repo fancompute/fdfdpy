@@ -42,7 +42,10 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 - numpy
 - scipy
 - matplotlib
-- pypardiso
+
+To load the MKL solver:
+
+	git submodule update --init --recursive
 
 ### To Do
 - [x] Normalize the `A` matrix.
