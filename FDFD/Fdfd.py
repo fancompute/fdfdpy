@@ -31,7 +31,9 @@ class Fdfd:
 
 	def solve_fields(self, b):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
-		
+
+		b = b.astype(np.complex128)
+
 		(field_X,field_Y,field_Z) = solver_direct(self.A, b, self.derivs, self.omega, self.pol, timing=False)
 		if self.pol == 'Hz':
 			self.derivs['Ex'] = field_X
