@@ -32,7 +32,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing
 	N = np.asarray(eps_r.shape)  # Number of mesh cells
 	M = np.prod(N)  # Number of unknowns
 	
-	if pol == 'Hz':
+	if pol == 'Ez':
 		vector_eps_z = EPSILON_0*eps_r.ravel(order='F')
 		T_eps_z = sp.spdiags(vector_eps_z, 0, M, M, format=matrix_format)
 
@@ -49,7 +49,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing
 			+ omega**2*T_eps_z
 		A = A / (omega**2*EPSILON_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 			
-	elif pol == 'Ez':
+	elif pol == 'Hz':
 		# Note, haven't included grid_average function yet
 		if averaging:
 			vector_eps_x = grid_average(EPSILON_0*eps_r, 'x').ravel(order='F')
