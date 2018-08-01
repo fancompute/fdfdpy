@@ -49,7 +49,7 @@ To load the MKL solver:
 
 ### To Do
 #### By end of week?
-- [ ] Get rid of ravel order F and see if that affects the code.
+- [x] Get rid of ravel order F and see if that affects the code (in https://github.com/fancompute/fdfdpy_OO/commit/4d80a848cc289ee06158e86eaaab5084f0a6a6ad)
 - [ ] Get things back in natural units if possible without getting 1e-25 fields.
 - [ ] Double check maxwell's equations for TM and TE field constructions.
 - [ ] write Fdfd._get_dAde() method.
