@@ -54,9 +54,8 @@ To load the MKL solver:
 - [x] Parallel sparse matrix solvers (see `pardiso` branch).
 - [ ] Dope plotting methods.
 - [ ] Refactor `linalg.py` into a few files (`pml.py`, `derivs.py`) to make it cleaner.
-- [ ] Make pardiso wrapper like complex symmetric matrices.
+- [x] Make pardiso wrapper like complex symmetric matrices.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Double check maxwell's equations for TM and TE field constructions.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
-- [ ] Allow for nonlinear A, where an electric field may be supplied when solving for the fields.
