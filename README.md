@@ -48,6 +48,8 @@ To load the MKL solver:
 	git submodule update --init --recursive
 
 ### To Do
+- [ ] Get rid of ravel order F and see if that affects the code.
+- [ ] Get things back in natural units if possible without getting 1e-25 fields.
 - [x] Normalize the `A` matrix.
 - [x] Parallel sparse matrix solvers (see `pardiso` branch).
 - [ ] Dope plotting methods.
