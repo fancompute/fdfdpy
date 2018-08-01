@@ -55,9 +55,9 @@ class Fdfd:
 			ex = -1/1j/self.omega/EPSILON_0 * Dyb.dot(X)
 			ey =  1/1j/self.omega/EPSILON_0 * Dxb.dot(X)
 
-			Ex = ex.reshape((Nx, Ny), order='F')
-			Ey = ey.reshape((Nx, Ny), order='F')
-			Hz = X.reshape((Nx, Ny), order='F')
+			Ex = ex.reshape((Nx, Ny))
+			Ey = ey.reshape((Nx, Ny))
+			Hz = X.reshape((Nx, Ny))
 
 			self.fields['Ex'] = Ex
 			self.fields['Ey'] = Ey
@@ -69,9 +69,9 @@ class Fdfd:
 			hx = -1/1j/self.omega/MU_0 * Dyb.dot(X)
 			hy =  1/1j/self.omega/MU_0 * Dxb.dot(X)
 
-			Hx = hx.reshape((Nx, Ny), order='F')
-			Hy = hy.reshape((Nx, Ny), order='F')
-			Ez = X.reshape((Nx, Ny), order='F')
+			Hx = hx.reshape((Nx, Ny))
+			Hy = hy.reshape((Nx, Ny))
+			Ez = X.reshape((Nx, Ny))
 
 			self.fields['Hx'] = Hx
 			self.fields['Hy'] = Hy

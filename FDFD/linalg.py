@@ -36,7 +36,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 	M = np.prod(N)  # Number of unknowns
 	
 	if pol == 'Ez':
-		vector_eps_z = EPSILON_0*eps_r.ravel(order='F')
+		vector_eps_z = EPSILON_0*eps_r.reshape((-1,))
 		T_eps_z = sp.spdiags(vector_eps_z, 0, M, M, format=matrix_format)
 
 		(Sxf, Sxb, Syf, Syb) = S_create(omega, N, NPML, xrange, yrange, matrix_format=matrix_format)
@@ -55,11 +55,11 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 	elif pol == 'Hz':
 		# Note, haven't included grid_average function yet
 		if averaging:
-			vector_eps_x = grid_average(EPSILON_0*eps_r, 'x').ravel(order='F')
-			vector_eps_y = grid_average(EPSILON_0*eps_r, 'y').ravel(order='F')
+			vector_eps_x = grid_average(EPSILON_0*eps_r, 'x').reshape((-1,))
+			vector_eps_y = grid_average(EPSILON_0*eps_r, 'y').reshape((-1,))
 		else:
-			vector_eps_x = EPSILON_0*eps_r.ravel(order='F')
-			vector_eps_y = EPSILON_0*eps_r.ravel(order='F')
+			vector_eps_x = EPSILON_0*eps_r.reshape((-1,))
+			vector_eps_y = EPSILON_0*eps_r.reshape((-1,))
 
 		# Setup the T_eps_x, T_eps_y, T_eps_x_inv, and T_eps_y_inv matrices
 		T_eps_x = sp.spdiags(vector_eps_x, 0, M, M, format=matrix_format)
@@ -183,18 +183,18 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATRIX_F
 	Sy_b_2D = np.zeros(N, dtype=np.complex128)
 
 	for i in range(0, Nx):
-		Sy_f_2D[i, :] = 1/s_vector_y_f
-		Sy_b_2D[i, :] = 1/s_vector_y_b
+		Sy_f_2D[:, i] = 1/s_vector_y_f
+		Sy_b_2D[:, i] = 1/s_vector_y_b
 
 	for j in range(0, Ny):
-		Sx_f_2D[:, j] = 1/s_vector_x_f
-		Sx_b_2D[:, j] = 1/s_vector_x_b
+		Sx_f_2D[j, :] = 1/s_vector_x_f
+		Sx_b_2D[j, :] = 1/s_vector_x_b
 
 	# Reshape the 2D s-factors into a 1D s-array
-	Sx_f_vec = np.reshape(Sx_f_2D, (1, M), order='F')
-	Sx_b_vec = np.reshape(Sx_b_2D, (1, M), order='F')
-	Sy_f_vec = np.reshape(Sy_f_2D, (1, M), order='F')
-	Sy_b_vec = np.reshape(Sy_b_2D, (1, M), order='F')
+	Sx_f_vec = Sx_f_2D.reshape((-1,))
+	Sx_b_vec = Sx_b_2D.reshape((-1,))
+	Sy_f_vec = Sy_f_2D.reshape((-1,))
+	Sy_b_vec = Sy_b_2D.reshape((-1,))
 
 	# Construct the 1D total s-array into a diagonal matrix
 	Sx_f = sp.spdiags(Sx_f_vec, 0, M, M, format=matrix_format)
@@ -231,7 +231,7 @@ def solver_direct(A, b, timing=False, solver=DEFAULT_SOLVER):
 	# solves linear system of equations
 	
 	b = b.astype(np.complex128)
-	b = b.ravel(order='F')
+	b = b.reshape((-1,))
 
 	if not b.any():
 		return zeros(b.shape)
