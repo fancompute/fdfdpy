@@ -24,7 +24,7 @@ class Fdfd:
 		
 		# construct the system matrix
 		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol,
-								matrix_format='csc', 
+								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
@@ -36,14 +36,14 @@ class Fdfd:
 
 		self.eps_r = new_eps
 		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol,
-								matrix_format='csc', 
+								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
-	def solve_fields(self, b, timing=False, solver='pardiso'):
+	def solve_fields(self, b, timing=False, solver=DEFAULT_SOLVER):
 		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
 
 		X = solver_direct(self.A, b, timing=timing, solver=solver)
@@ -59,9 +59,9 @@ class Fdfd:
 			Ey = ey.reshape((Nx, Ny), order='F')
 			Hz = X.reshape((Nx, Ny), order='F')
 
-			self.derivs['Ex'] = Ex
-			self.derivs['Ey'] = Ey
-			self.derivs['Hz'] = Hz
+			self.fields['Ex'] = Ex
+			self.fields['Ey'] = Ey
+			self.fields['Hz'] = Hz
 
 			return (Ex, Ey ,Hz)
 
@@ -73,9 +73,9 @@ class Fdfd:
 			Hy = hy.reshape((Nx, Ny), order='F')
 			Ez = X.reshape((Nx, Ny), order='F')
 
-			self.derivs['Hx'] = Hx
-			self.derivs['Hy'] = Hy
-			self.derivs['Ez'] = Ez
+			self.fields['Hx'] = Hx
+			self.fields['Hy'] = Hy
+			self.fields['Ez'] = Ez
 
 			return (Hx, Hy, Ez)
 

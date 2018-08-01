@@ -27,7 +27,10 @@ def is_equal(matrix1, matrix2):
 	return (matrix1!=matrix2).nnz==0
 
 
-def construct_A(omega, xrange, yrange, eps_r, NPML, pol, averaging=False, timing=False, matrix_format='csc'):
+def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
+				averaging=False,
+				timing=False,
+				matrix_format=DEFAULT_MATRIX_FORMAT):
 	# makes the A matrix
 	N = np.asarray(eps_r.shape)  # Number of mesh cells
 	M = np.prod(N)  # Number of unknowns
@@ -126,7 +129,7 @@ def create_sfactor(wrange, s, omega, Nw, Nw_pml):
 	return sfactor_array
 
 
-def createDws(w, s, dL, N, matrix_format='csc'):
+def createDws(w, s, dL, N, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# creates the derivative matrices
 
 	Nx = N[0]
@@ -154,7 +157,7 @@ def createDws(w, s, dL, N, matrix_format='csc'):
 	return Dws
 
 
-def S_create(omega, N, Npml, xrange, yrange=None, matrix_format='csc'):
+def S_create(omega, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# creates S matrices for the PML creation
 
 	M = np.prod(N)
@@ -224,7 +227,7 @@ def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
 	return (values, vectors)
 
 
-def solver_direct(A, b, timing=False, solver='pardiso'):
+def solver_direct(A, b, timing=False, solver=DEFAULT_SOLVER):
 	# solves linear system of equations
 	
 	b = b.astype(np.complex128)
