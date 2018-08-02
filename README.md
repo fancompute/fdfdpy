@@ -37,6 +37,15 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 
 `fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
 
+### Plotting
+
+Primary fields (Hz/Ez) can be visualized using the included helper functions:
+
+	simulation.plt_re(outline=True, cbar=True)
+	simulation.plt_abs(outline=True, cbar=True)
+
+These optionally outline the permittivity with contours and can be supplied with a matplotlib axis handle to plot into.
+
 ### Requirements
 
 - numpy
@@ -58,7 +67,7 @@ To load the MKL solver:
 #### Whenever
 - [x] Normalize the `A` matrix.
 - [x] Parallel sparse matrix solvers (see `pardiso` branch).
-- [ ] Dope plotting methods.
+- [x] Dope plotting methods.
 - [x] Make pardiso wrapper like complex symmetric matrices.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.

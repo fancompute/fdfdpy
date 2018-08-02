@@ -1,6 +1,7 @@
 import numpy as np
 from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs
 from FDFD.constants import *
+from FDFD.plot import plt_base
 
 class Fdfd:
 
@@ -94,3 +95,26 @@ class Fdfd:
 		assert self.pol in ['Ez','Hz'], "pol must be one of 'Ez' or 'Hz'"
 		
 		# to do, check for correct types as well.
+
+
+	def plt_abs(self, cbar=True, outline=True, ax=None):
+		# plot absolute value of primary field (e.g. Ez/Hz)
+
+		field_val = np.abs( self.fields[self.pol] )
+		outline_val = np.abs( self.eps_r )
+		vmin = 0.0
+		vmax = field_val.max()
+		cmap = "magma"
+
+		return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol, cbar=cbar, outline=outline, ax=ax)
+
+	def plt_re(self, cbar=True, outline=True, ax=None):
+		# plot real part of primary field (e.g. Ez/Hz)
+
+		field_val = np.real( self.fields[self.pol] )
+		outline_val = np.abs( self.eps_r )
+		vmin = -np.abs(field_val).max()
+		vmax = +np.abs(field_val).max()
+		cmap = "RdBu"
+
+		return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol, cbar=cbar, outline=outline, ax=ax)
