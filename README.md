@@ -59,10 +59,10 @@ To load the MKL solver:
 ### To Do
 #### By end of week?
 - [x] Get rid of ravel order F and see if that affects the code
+- [x] Refactor `linalg.py` into a few files (`pml.py`, `derivs.py`) to make it cleaner.
 - [ ] Get things back in natural units if possible without getting 1e-25 fields.
 - [ ] Double check maxwell's equations for TM and TE field constructions.
 - [ ] write Fdfd._get_dAde() method.
-- [ ] Refactor `linalg.py` into a few files (`pml.py`, `derivs.py`) to make it cleaner.
 - [ ] test adjoints for Ez and Hz
 #### Whenever
 - [x] Normalize the `A` matrix.
@@ -72,3 +72,4 @@ To load the MKL solver:
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
+- [ ] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
