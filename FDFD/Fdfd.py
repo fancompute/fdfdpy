@@ -5,9 +5,10 @@ from FDFD.plot import plt_base
 
 class Fdfd:
 
-	def __init__(self, omega, eps_r, dl, NPML, pol):
+	def __init__(self, omega, eps_r, dl, NPML, pol, L0=DEFAULT_LENGTH_SCALE):
 		# initializes Fdfd object
 
+		self.L0 = L0
 		self.omega = float(omega)
 		self.dl = float(dl)
 		self.eps_r = eps_r
@@ -24,7 +25,7 @@ class Fdfd:
 		self.yrange = [0, float(Ny*self.dl)]
 		
 		# construct the system matrix
-		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol,
+		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol, self.L0,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
@@ -37,7 +38,7 @@ class Fdfd:
 		# sets a new permittivity with the same other parameters and reconstructs a new A
 
 		self.eps_r = new_eps
-		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol,
+		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
@@ -89,6 +90,7 @@ class Fdfd:
 	def _check_inputs(self):
 		# checks the inputs and makes sure they are kosher
 		
+		assert self.L0 > 0, "L0 must be a positive number, was supplied {},".format(str(self.L0))
 		assert len(self.NPML) == 2, "yrange must be a list of length 2, was supplied {}, which is of length {}".format(str(self.NPML), len(self.NPML))
 		assert self.NPML[0] >= 0 and self.NPML[1] >= 0, "both elements of NPML must be >= 0"
 		

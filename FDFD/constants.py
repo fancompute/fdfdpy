@@ -7,3 +7,4 @@ ETA_0 = np.sqrt(MU_0/EPSILON_0)
 
 DEFAULT_MATRIX_FORMAT = 'csr'
 DEFAULT_SOLVER = 'pardiso'
+DEFAULT_LENGTH_SCALE = 1e-6 # microns

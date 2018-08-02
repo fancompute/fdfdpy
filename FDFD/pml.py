@@ -10,13 +10,13 @@ def _sig_w(l, dw, m=4, lnR=-12):
 	return sig_max*(l/dw)**m
 
 
-def _S(l, dw, omega):
+def _S(l, dw, omega, L0):
 	# helper for create_sfactor()
 
-	return 1 - 1j*_sig_w(l, dw)/(omega*EPSILON_0)
+	return 1 - 1j*_sig_w(l, dw)/(omega*EPSILON_0*L0)
 
 
-def _create_sfactor(wrange, s, omega, Nw, Nw_pml):
+def _create_sfactor(wrange, L0, s, omega, Nw, Nw_pml):
 	# used to help construct the S matrices for the PML creation
 
 	sfactor_array = ones(Nw, dtype=complex128)
@@ -27,18 +27,18 @@ def _create_sfactor(wrange, s, omega, Nw, Nw_pml):
 	for i in range(0, Nw):
 		if s is 'f':
 			if i <= Nw_pml:
-				sfactor_array[i] = _S(hw * (Nw_pml - i + 0.5), dw, omega)
+				sfactor_array[i] = _S(hw * (Nw_pml - i + 0.5), dw, omega, L0)
 			elif i > Nw - Nw_pml:
-				sfactor_array[i] = _S(hw * (i - (Nw - Nw_pml) - 0.5), dw, omega)
+				sfactor_array[i] = _S(hw * (i - (Nw - Nw_pml) - 0.5), dw, omega, L0)
 		if s is 'b':
 			if i <= Nw_pml:
-				sfactor_array[i] = _S(hw * (Nw_pml - i + 1), dw, omega)
+				sfactor_array[i] = _S(hw * (Nw_pml - i + 1), dw, omega, L0)
 			elif i > Nw - Nw_pml:
-				sfactor_array[i] = _S(hw * (i - (Nw - Nw_pml) - 1), dw, omega)
+				sfactor_array[i] = _S(hw * (i - (Nw - Nw_pml) - 1), dw, omega, L0)
 	return sfactor_array
 
 
-def S_create(omega, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATRIX_FORMAT):
+def S_create(omega, L0, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# creates S matrices for the PML creation
 
 	M = prod(N)
@@ -52,10 +52,10 @@ def S_create(omega, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATRIX_F
 	Ny_pml = Npml[1]
 
 	# Create the sfactor in each direction and for 'f' and 'b'
-	s_vector_x_f = _create_sfactor(xrange, 'f', omega, Nx, Nx_pml)
-	s_vector_x_b = _create_sfactor(xrange, 'b', omega, Nx, Nx_pml)
-	s_vector_y_f = _create_sfactor(yrange, 'f', omega, Ny, Ny_pml)
-	s_vector_y_b = _create_sfactor(yrange, 'b', omega, Ny, Ny_pml)
+	s_vector_x_f = _create_sfactor(xrange, L0, 'f', omega, Nx, Nx_pml)
+	s_vector_x_b = _create_sfactor(xrange, L0, 'b', omega, Nx, Nx_pml)
+	s_vector_y_f = _create_sfactor(yrange, L0, 'f', omega, Ny, Ny_pml)
+	s_vector_y_b = _create_sfactor(yrange, L0, 'b', omega, Ny, Ny_pml)
 
 	# Fill the 2D space with layers of appropriate s-factors
 	Sx_f_2D = zeros(N, dtype=complex128)
