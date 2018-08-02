@@ -63,7 +63,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, L0,
 		# These can therefore be just lumped into one diagonal matrix 
 
 		dAdeps = omega**2*EPSILON_0_*sp.eye(M, M, 0, format=matrix_format)
-		dAdeps = dAdeps / (omega**2*EPSILON_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+		# dAdeps = dAdeps / (omega**2*EPSILON_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 
 			
 	elif pol == 'Hz':
@@ -102,9 +102,9 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, L0,
 		# The requirement is that Dxf and Dxb.T have no overlapping non-zero elements apart from on the diagonal (same for Dyf and Dyb)
 
 		dAdepsx = -EPSILON_0*Dxf.dot(np.square(T_eps_x_inv)).dot(Dxb)
-		dAdepsx = dAdepsx / (omega**2*MU_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+		# dAdepsx = dAdepsx / (omega**2*MU_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 		dAdepsy= -EPSILON_0*Dyf.dot(np.square(T_eps_y_inv)).dot(Dyb)
-		dAdepsy = dAdepsy / (omega**2*MU_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+		# dAdepsy = dAdepsy / (omega**2*MU_0_)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 
 		dAdeps = {
 			'dAdepsx' : dAdepsx,
