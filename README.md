@@ -1,6 +1,6 @@
 # fdfdpy_OO
 
-Test
+![](img/dipole_dielectric_field.png)
 
 This is an object oriented version of [fdfdpy](https://github.com/fancompute/fdfdpy).
 
