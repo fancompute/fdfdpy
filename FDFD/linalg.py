@@ -51,6 +51,14 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 			+ (Dyf*1/MU_0).dot(Dyb) \
 			+ omega**2*T_eps_z
 		A = A / (omega**2*EPSILON_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+
+		# Construct derivative of A with respect to epsilon
+		# Note: the derivative with respect to each epsilon_i is a matrix with a single non-zero element at position ii
+		# These can therefore be just lumped into one diagonal matrix 
+
+		dAdeps = omega**2*EPSILON_0*sp.eye(M, M, 0, format=matrix_format)
+		dAdeps = dAdeps / (omega**2*EPSILON_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+
 			
 	elif pol == 'Hz':
 		# Note, haven't included grid_average function yet
@@ -80,6 +88,23 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 			+ omega**2*MU_0*sp.eye(M)
 		
 		A = A / (omega**2*MU_0)     # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+
+		# Construct derivative of A with respect to epsilon
+		# Note: the derivative with respect to each epsilon_i is a matrix with a single non-zero element at position ii
+		# These can therefore be just lumped into one diagonal matrix 
+		# Also note: this is not straightforwardly clear for this polarization, but it seems to be correct. 
+		# The requirement is that Dxf and Dxb.T have no overlapping non-zero elements apart from on the diagonal (same for Dyf and Dyb)
+
+		dAdepsx = -EPSILON_0*Dxf.dot(np.square(T_eps_x_inv)).dot(Dxb)
+		dAdepsx = dAdepsx / (omega**2*MU_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+		dAdepsy= -EPSILON_0*Dyf.dot(np.square(T_eps_y_inv)).dot(Dyb)
+		dAdepsy = dAdepsy / (omega**2*MU_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
+
+		dAdeps = {
+			'dAdepsx' : dAdepsx,
+			'dAdepsy' : dAdepsy
+		}
+
 		
 	else:
 		raise ValueError("something went wrong and pol is not one of Ez, Hz, instead was given {}".format(pol))
@@ -91,7 +116,7 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 		'Dyf' : Dyf
 	}
 					
-	return (A, derivs)
+	return (A, derivs, dAdeps)
 
 
 def sig_w(l, dw, m=4, lnR=-12):

@@ -23,11 +23,12 @@ class Fdfd:
 		self.yrange = [0, float(Ny*self.dl)]
 		
 		# construct the system matrix
-		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol,
+		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
+		self.dAdeps = dAdeps
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
@@ -35,11 +36,12 @@ class Fdfd:
 		# sets a new permittivity with the same other parameters and reconstructs a new A
 
 		self.eps_r = new_eps
-		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol,
+		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
+		self.dAdeps = dAdeps
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
