@@ -265,9 +265,9 @@ def solver_direct(A, b, timing=False, solver=DEFAULT_SOLVER):
 		t = time()
 
 	if solver.lower() == 'pardiso':
-		pSolve = pardisoSolver(A, mtype=13) # Set matrix to complex unsymmetric
-		pSolve.run_pardiso(12) # Factorize
-		x = pSolve.run_pardiso(33, b) # Solve
+		pSolve = pardisoSolver(A, mtype=13) # Matrix is complex unsymmetric due to SC-PML
+		pSolve.factor()
+		x = pSolve.solve(b)
 		pSolve.clear()
 
 	elif solver.lower() == 'scipy':
