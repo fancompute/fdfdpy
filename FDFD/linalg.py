@@ -10,6 +10,8 @@ from time import time
 
 from FDFD.constants import *
 from FDFD.pml import S_create
+from FDFD.derivatives import createDws, unpack_derivs
+
 
 def dL(N, xrange, yrange=None):
 	# solves for the grid spacing
@@ -118,44 +120,6 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol,
 	}
 					
 	return (A, derivs, dAdeps)
-
-
-def createDws(w, s, dL, N, matrix_format=DEFAULT_MATRIX_FORMAT):
-	# creates the derivative matrices
-
-	Nx = N[0]
-	dx = dL[0]
-	if len(N) is not 1:
-		Ny = N[1]
-		dy = dL[1]
-	else:
-		Ny = 1
-		dy = inf
-	if w is 'x':
-		if s is 'f':
-			dxf = sp.diags([-1, 1, 1], [0, 1, -Nx+1], shape=(Nx, Nx))
-			Dws = 1/dx*sp.kron(sp.eye(Ny), dxf, format=matrix_format)
-		else:
-			dxb = sp.diags([1, -1, -1], [0, -1, Nx-1], shape=(Nx, Nx))
-			Dws = 1/dx*sp.kron(sp.eye(Ny), dxb, format=matrix_format)
-	if w is 'y':
-		if s is 'f':
-			dyf = sp.diags([-1, 1, 1], [0, 1, -Ny+1], shape=(Ny, Ny))
-			Dws = 1/dy*sp.kron(dyf, sp.eye(Nx), format=matrix_format)
-		else:
-			dyb = sp.diags([1, -1, -1], [0, -1, Ny-1], shape=(Ny, Ny))
-			Dws = 1/dy*sp.kron(dyb, sp.eye(Nx), format=matrix_format)
-	return Dws
-
-
-def unpack_derivs(derivs):
-	# takes derivs dictionary and returns tuple for convenience
-
-	Dyb = derivs['Dyb']
-	Dxb = derivs['Dxb']
-	Dxf = derivs['Dxf']
-	Dyf = derivs['Dyf']
-	return (Dyb, Dxb, Dxf, Dyf)
 
 
 def solver_eigs(A, Neigs, guess_value=0, guess_vector=None, timing=False):
