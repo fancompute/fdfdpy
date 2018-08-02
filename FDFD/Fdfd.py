@@ -48,9 +48,10 @@ class Fdfd:
 
 
 	def solve_fields(self, b, timing=False, solver=DEFAULT_SOLVER):
-		# performs direct solve for A given source b (note, b is not a current, it's literally the b in Ax = b)
+		# performs direct solve for A given source b
+		# (!) NOTE: b is now a current density in units of [Amps/L0^2] (for the Ez case)
 
-		X = solver_direct(self.A, b, timing=timing, solver=solver)
+		X = solver_direct(self.A, b*1j*self.omega, timing=timing, solver=solver)
 
 		(Nx,Ny) = b.shape
 		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
