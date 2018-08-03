@@ -60,7 +60,6 @@ class Fdfd:
 		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
 
 		if self.pol == 'Hz':
-			# Note, haven't included grid_average function yet
 			if averaging:
 				vector_eps_x = grid_average(EPSILON_0_*self.eps_r, 'x').reshape((-1,))
 				vector_eps_y = grid_average(EPSILON_0_*self.eps_r, 'y').reshape((-1,))

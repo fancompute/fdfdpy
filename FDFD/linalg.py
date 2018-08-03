@@ -68,7 +68,6 @@ def construct_A(omega, xrange, yrange, eps_r, NPML, pol, L0,
 		# A = A / (omega**2*EPSILON_0)        # normalize A to be unitless.  (note, this isn't in original fdfdpy)
 			
 	elif pol == 'Hz':
-		# Note, haven't included grid_average function yet
 		if averaging:
 			vector_eps_x = grid_average(EPSILON_0_*eps_r, 'x').reshape((-1,))
 			vector_eps_y = grid_average(EPSILON_0_*eps_r, 'y').reshape((-1,))
