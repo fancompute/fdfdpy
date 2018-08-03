@@ -2,6 +2,7 @@ import numpy as np
 from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs
 from FDFD.constants import *
 from FDFD.plot import plt_base
+import scipy.sparse as sp
 
 class Fdfd:
 
@@ -25,12 +26,11 @@ class Fdfd:
 		self.yrange = [0, float(Ny*self.dl)]
 		
 		# construct the system matrix
-		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol, self.L0,
+		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol, self.L0,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
-		self.dAdeps = dAdeps
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
@@ -38,16 +38,15 @@ class Fdfd:
 		# sets a new permittivity with the same other parameters and reconstructs a new A
 
 		self.eps_r = new_eps
-		(A, derivs, dAdeps) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
+		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
 								matrix_format=DEFAULT_MATRIX_FORMAT, 
 								timing=False)
 		self.A = A
 		self.derivs = derivs
-		self.dAdeps = dAdeps
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
-	def solve_fields(self, b, timing=False, solver=DEFAULT_SOLVER):
+	def solve_fields(self, b, timing=False, averaging=False, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# performs direct solve for A given source b
 		# (!) NOTE: b is now a current density in units of [Amps/L0^2] (for the Ez case)
 
@@ -57,11 +56,23 @@ class Fdfd:
 		X = solver_direct(self.A, b*1j*self.omega, timing=timing, solver=solver)
 
 		(Nx,Ny) = b.shape
+		M = Nx*Ny
 		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
 
 		if self.pol == 'Hz':
-			ex = -1/1j/self.omega/EPSILON_0_ * Dyb.dot(X)
-			ey =  1/1j/self.omega/EPSILON_0_ * Dxb.dot(X)
+			# Note, haven't included grid_average function yet
+			if averaging:
+				vector_eps_x = grid_average(EPSILON_0_*self.eps_r, 'x').reshape((-1,))
+				vector_eps_y = grid_average(EPSILON_0_*self.eps_r, 'y').reshape((-1,))
+			else:
+				vector_eps_x = EPSILON_0_*self.eps_r.reshape((-1,))
+				vector_eps_y = EPSILON_0_*self.eps_r.reshape((-1,))
+			
+			T_eps_x_inv = sp.spdiags(1/vector_eps_x, 0, M, M, format=matrix_format)
+			T_eps_y_inv = sp.spdiags(1/vector_eps_y, 0, M, M, format=matrix_format)
+			
+			ex = -1/1j/self.omega * T_eps_x_inv.dot(Dyb).dot(X)
+			ey =  1/1j/self.omega * T_eps_x_inv.dot(Dxb).dot(X)
 
 			Ex = ex.reshape((Nx, Ny))
 			Ey = ey.reshape((Nx, Ny))
