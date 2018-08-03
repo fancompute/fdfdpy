@@ -51,14 +51,17 @@ class Fdfd:
 		# performs direct solve for A given source b
 		# (!) NOTE: b is now a current density in units of [Amps/L0^2] (for the Ez case)
 
+		EPSILON_0_ = EPSILON_0*self.L0
+		MU_0_ = MU_0*self.L0
+
 		X = solver_direct(self.A, b*1j*self.omega, timing=timing, solver=solver)
 
 		(Nx,Ny) = b.shape
 		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
 
 		if self.pol == 'Hz':
-			ex = -1/1j/self.omega/EPSILON_0 * Dyb.dot(X)
-			ey =  1/1j/self.omega/EPSILON_0 * Dxb.dot(X)
+			ex = -1/1j/self.omega/EPSILON_0_ * Dyb.dot(X)
+			ey =  1/1j/self.omega/EPSILON_0_ * Dxb.dot(X)
 
 			Ex = ex.reshape((Nx, Ny))
 			Ey = ey.reshape((Nx, Ny))
@@ -71,8 +74,8 @@ class Fdfd:
 			return (Ex, Ey ,Hz)
 
 		elif self.pol == 'Ez':
-			hx = -1/1j/self.omega/MU_0 * Dyb.dot(X)
-			hy =  1/1j/self.omega/MU_0 * Dxb.dot(X)
+			hx = -1/1j/self.omega/MU_0_ * Dyb.dot(X)
+			hy =  1/1j/self.omega/MU_0_ * Dxb.dot(X)
 
 			Hx = hx.reshape((Nx, Ny))
 			Hy = hy.reshape((Nx, Ny))
