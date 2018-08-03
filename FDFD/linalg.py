@@ -13,6 +13,15 @@ from FDFD.pml import S_create
 from FDFD.derivatives import createDws, unpack_derivs
 
 
+def grid_average(center_array, w):
+	# computes values at cell edges
+
+    xy = {'x': 0, 'y': 1}
+    center_shifted = np.roll(center_array, 1, axis=xy[w])
+    avg_array = (center_shifted+center_array)/2
+    return avg_array
+
+
 def dL(N, xrange, yrange=None):
 	# solves for the grid spacing
 	
