@@ -10,13 +10,14 @@ This is an object oriented version of [fdfdpy](https://github.com/fancompute/fdf
 
 The `Fdfd` class is initialized as
 
-	FDFD = Fdfd(omega, eps_r, dl, NPML, pol)
+	FDFD = Fdfd(omega, eps_r, dl, NPML, pol, L0)
 
 - `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
 - `dl` : the spatial grid size in units of meters
 - `NPML` : defines number of PML grids `[# on x borders, # on y borders]`
 - `pol` : polarization, one of `{'Hz','Ez'}` where `z` is the transverse field.
+- `L0` : simulation length scale, default is 1e-6 meters (one micron)
 
 Creating a new Fdfd object solves for:
 
@@ -57,13 +58,21 @@ To load the MKL solver:
 	git submodule update --init --recursive
 
 ### To Do
-#### By end of week?
+#### By end of week ending 08/03
 - [x] Get rid of ravel order F and see if that affects the code
 - [x] Refactor `linalg.py` into a few files (`pml.py`, `derivs.py`) to make it cleaner.
 - [x] Get things back in natural units if possible without getting 1e-25 fields.
-- [ ] Double check maxwell's equations for TM and TE field constructions.
-- [ ] write Fdfd._get_dAde() method.
-- [ ] test adjoints for Ez and Hz
+- [x] Double check maxwell's equations for TM and TE field constructions. *(Note: they look good to me :) )*
+- [x] write Fdfd.\_get\_dAde() method. *(Note: in the end this was removed from Fdfd and put into adjoint.py)*
+- [x] test adjoints for Ez and Hz
+
+#### By end of week ending 08/10
+- [ ] Rewrite the nonlinear_solvers functions in view of recent changes 
+- [ ] Test an optimization of a linear system
+- [ ] Write an adjoint gradient computation for a nonlinear system
+- [ ] Write a gradient computation using the RNN-like approach
+- [ ] Test a nonlinear optimization
+
 #### Whenever
 - [x] Normalize the `A` matrix.
 - [x] Parallel sparse matrix solvers (see `pardiso` branch).
