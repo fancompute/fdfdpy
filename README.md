@@ -10,33 +10,42 @@ This is an object oriented version of [fdfdpy](https://github.com/fancompute/fdf
 
 The `Fdfd` class is initialized as
 
-	FDFD = Fdfd(omega, eps_r, dl, NPML, pol, L0)
+	simulation = Fdfd(omega, eps_r, dl, NPML, pol, L0)
 
 - `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
-- `dl` : the spatial grid size in units of meters
+- `dl` : the spatial grid size in units of `L0`
 - `NPML` : defines number of PML grids `[# on x borders, # on y borders]`
 - `pol` : polarization, one of `{'Hz','Ez'}` where `z` is the transverse field.
 - `L0` : simulation length scale, default is 1e-6 meters (one micron)
 
 Creating a new Fdfd object solves for:
 
-- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of meters
-- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of meters
+- `xrange` : defines spatial domain in x [left-most position, right-most position] in units of `L0`
+- `yrange` : defines spatial domain in y [bottom-most position, top-most position] in units of `L0`
 - `A` : the Maxwell operator, which is used later to solve for the E&M fields.
 - `derivs` : dictionary storing the derivative operators.
 
-It also creates a `mu_r` as `numpy.ones(eps_r.shape)`. 
+It also creates a relative permeability, `mu_r`, as `numpy.ones(eps_r.shape)`. 
 
 ### Solving for the electromagnetic fields
 
 Now, we have everything we need to solve the system for the electromagnetic fields, by running
 
-	fields = FDFD.solve_fields(b, timing=False)
+	fields = simulation.solve_fields(b, timing=False)
 	
 `b` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  PLEASE NOTE: `b` is exacly the source for `Ax = b`, it is not a current density!.  `b.shape` must be `(Nx,Ny)`.
 
 `fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
+
+### Setting a new permittivity
+
+If you want to change the permittivity distribution, you may run
+
+	simulation.reset_eps(new_eps)
+
+And this will reconstruct the system matrix and store it in `FDFD`.
+
 
 ### Plotting
 
@@ -58,26 +67,17 @@ To load the MKL solver:
 	git submodule update --init --recursive
 
 ### To Do
-#### By end of week ending 08/03
-- [x] Get rid of ravel order F and see if that affects the code
-- [x] Refactor `linalg.py` into a few files (`pml.py`, `derivs.py`) to make it cleaner.
-- [x] Get things back in natural units if possible without getting 1e-25 fields.
-- [x] Double check maxwell's equations for TM and TE field constructions. *(Note: they look good to me :) )*
-- [x] write Fdfd.\_get\_dAde() method. *(Note: in the end this was removed from Fdfd and put into adjoint.py)*
-- [x] test adjoints for Ez and Hz
 
 #### By end of week ending 08/10
 - [ ] Rewrite the nonlinear_solvers functions in view of recent changes 
-- [ ] Test an optimization of a linear system
+- [x] Test an optimization of a linear system
 - [ ] Write an adjoint gradient computation for a nonlinear system
 - [ ] Write a gradient computation using the RNN-like approach
 - [ ] Test a nonlinear optimization
+- [ ] Handle cases where objective function is a function of the linear field and nonlinear field (for example, supply a `J` dictionary with keys `J_lin` and `J_nonlin` each containing functions for these parts.
 
 #### Whenever
-- [x] Normalize the `A` matrix.
-- [x] Parallel sparse matrix solvers (see `pardiso` branch).
-- [x] Dope plotting methods.
-- [x] Make pardiso wrapper like complex symmetric matrices.
+- [ ] More dope plotting methods.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
