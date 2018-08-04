@@ -1,8 +1,8 @@
-# fdfdpy_OO
+# fdfdpy
 
 ![](img/dipole_dielectric_field.png)
 
-This is an object oriented version of [fdfdpy](https://github.com/fancompute/fdfdpy).
+This is a pure Python implementation of the finite difference frequency domain (FDFD) method. It makes use of scipy, numpy, matplotlib, and the MKL Pardiso solver. fdfdpy currently supports 2D geometries
 
 ## Structure
 
