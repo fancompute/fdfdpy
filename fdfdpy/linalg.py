@@ -8,9 +8,9 @@ from pyMKL import pardisoSolver
 import numpy as np
 from time import time
 
-from FDFD.constants import *
-from FDFD.pml import S_create
-from FDFD.derivatives import createDws, unpack_derivs
+from fdfdpy.constants import *
+from fdfdpy.pml import S_create
+from fdfdpy.derivatives import createDws, unpack_derivs
 
 
 def grid_average(center_array, w):

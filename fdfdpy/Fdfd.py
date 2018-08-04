@@ -1,7 +1,7 @@
 import numpy as np
-from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs, grid_average
-from FDFD.constants import *
-from FDFD.plot import plt_base
+from fdfdpy.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs, grid_average
+from fdfdpy.constants import *
+from fdfdpy.plot import plt_base
 import scipy.sparse as sp
 
 class Fdfd:

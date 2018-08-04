@@ -1,5 +1,5 @@
 from scipy.sparse import diags, kron, eye
-from FDFD.constants import *
+from fdfdpy.constants import *
 
 def createDws(w, s, dL, N, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# creates the derivative matrices
