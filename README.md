@@ -73,6 +73,7 @@ To load the MKL solver:
 - [x] Test an optimization of a linear system
 
 #### Whenever
+- [ ] Modal source.
 - [ ] More dope plotting methods.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
