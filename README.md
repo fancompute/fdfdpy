@@ -71,10 +71,6 @@ To load the MKL solver:
 #### By end of week ending 08/10
 - [ ] Rewrite the nonlinear_solvers functions in view of recent changes 
 - [x] Test an optimization of a linear system
-- [ ] Write an adjoint gradient computation for a nonlinear system
-- [ ] Write a gradient computation using the RNN-like approach
-- [ ] Test a nonlinear optimization
-- [ ] Handle cases where objective function is a function of the linear field and nonlinear field (for example, supply a `J` dictionary with keys `J_lin` and `J_nonlin` each containing functions for these parts.
 
 #### Whenever
 - [ ] More dope plotting methods.
