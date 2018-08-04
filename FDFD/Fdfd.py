@@ -1,5 +1,5 @@
 import numpy as np
-from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs
+from FDFD.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs, grid_average
 from FDFD.constants import *
 from FDFD.plot import plt_base
 import scipy.sparse as sp
