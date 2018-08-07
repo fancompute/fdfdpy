@@ -69,7 +69,7 @@ To load the MKL solver:
 ### To Do
 
 #### By end of week ending 08/10
-- [ ] Rewrite the nonlinear_solvers functions in view of recent changes 
+- [x] Rewrite the nonlinear_solvers functions in view of recent changes 
 - [x] Test an optimization of a linear system
 
 #### Whenever
