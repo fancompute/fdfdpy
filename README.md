@@ -68,13 +68,9 @@ To load the MKL solver:
 
 ### To Do
 
-#### By end of week ending 08/10
-- [x] Rewrite the nonlinear_solvers functions in view of recent changes 
-- [x] Test an optimization of a linear system
-
 #### Whenever
 - [ ] Modal source.
-- [ ] More dope plotting methods.
+- [x] More dope plotting methods.
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
