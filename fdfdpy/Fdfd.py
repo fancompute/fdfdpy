@@ -1,8 +1,12 @@
 import numpy as np
+import scipy.sparse as sp
+
+import copy
+
 from fdfdpy.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs, grid_average
 from fdfdpy.constants import *
-from fdfdpy.plot import plt_base
-import scipy.sparse as sp
+from fdfdpy.plot import plt_base, plt_base_eps
+from fdfdpy.nonlinear_solvers import born_solve, newton_solve
 
 class Fdfd:
 
@@ -101,6 +105,43 @@ class Fdfd:
 			raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
 
+	def solve_fields_nl(self, b, nonlinear_fn, nl_region, dnl_de=None, timing=False, averaging=False,
+						Estart=None, solver_nl='born', conv_threshold=1e-10, max_num_iter=50,
+						solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
+		# solves for the nonlinear fields of the simulation.
+
+		# store the original permittivity
+		eps_orig = copy.deepcopy(self.eps_r)
+		
+		# if the nonlinear objects were not supplied, throw an error
+		if nonlinear_fn is None or nl_region is None:
+			raise ValueError("'nonlinear_fn' and 'nl_region' must be supplied")
+
+		# if born solver
+		if solver_nl == 'born':
+
+			(Hx, Hy, Ez, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter)
+
+		# if newton solver
+		elif solver_nl == 'newton':
+
+			# newton needs the derivative of the nonlinearity.
+			if dnl_de is None:
+				raise ValueError("'dnl_de' argument must be set to run Newton solve")
+			
+			(Hx, Hy, Ez, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter)
+
+		# incorrect solver_nl argument
+		else:
+			raise AssertionError("solver must be one of {'born', 'newton'}")
+
+		# reset the permittivity to the original value
+		self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
+
+		# return final nonlinear fields and an array of the norm convergences
+		return (Hx, Hy, Ez, conv_array)
+
+
 	def _check_inputs(self):
 		# checks the inputs and makes sure they are kosher
 		
@@ -116,6 +157,9 @@ class Fdfd:
 	def plt_abs(self, cbar=True, outline=True, ax=None):
 		# plot absolute value of primary field (e.g. Ez/Hz)
 
+		if self.fields[self.pol] is None:
+			raise ValueError("need to solve the simulation first")
+
 		field_val = np.abs( self.fields[self.pol] )
 		outline_val = np.abs( self.eps_r )
 		vmin = 0.0
@@ -127,6 +171,9 @@ class Fdfd:
 	def plt_re(self, cbar=True, outline=True, ax=None):
 		# plot real part of primary field (e.g. Ez/Hz)
 
+		if self.fields[self.pol] is None:
+			raise ValueError("need to solve the simulation first")
+
 		field_val = np.real( self.fields[self.pol] )
 		outline_val = np.abs( self.eps_r )
 		vmin = -np.abs(field_val).max()
@@ -134,3 +181,14 @@ class Fdfd:
 		cmap = "RdBu"
 
 		return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol, cbar=cbar, outline=outline, ax=ax)
+
+	def plt_eps(self, cbar=True, outline=True, ax=None):
+		# plot the permittivity distribution
+
+		eps_val = np.abs(self.eps_r)
+		outline_val = np.abs(self.eps_r)
+		vmin = 1
+		vmax = np.abs(self.eps_r).max()
+		cmap = "Greys"
+
+		return plt_base_eps(eps_val, outline_val, cmap, vmin, vmax, cbar=cbar, outline=outline, ax=ax)
