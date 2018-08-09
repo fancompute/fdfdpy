@@ -9,12 +9,12 @@ from fdfdpy.constants import *
 
 # Note: for both solvers, the simulation object must have been initialized with the linear permittivity eps_r
 
-def born_solve(simulation, b, nl_region, nonlinear_fn, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False):
+def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False):
 	# solves for the nonlinear fields using direct substitution / Born approximation / Picard / whatever you want to call it
 
 	# Stores convergence parameters
 	conv_array = np.zeros((max_num_iter, 1))
-
+	
 	eps_lin = simulation.eps_r
 
 	if simulation.pol == 'Ez':
@@ -49,7 +49,6 @@ def born_solve(simulation, b, nl_region, nonlinear_fn, Estart=None, conv_thresho
 		return (Hx, Hy, Ez, conv_array)
 
 	elif simulation.pol == 'Hz':
-		print(averaging)
 		# Defne the starting field for the simulation
 		if Estart is None:
 			(Ex,Ey,Hz) = simulation.solve_fields(b, averaging=averaging)
@@ -83,7 +82,7 @@ def born_solve(simulation, b, nl_region, nonlinear_fn, Estart=None, conv_thresho
 		return (Ex, Ey, Hz, conv_array)
 
 
-def newton_solve(simulation, b, nl_region, nonlinear_fn, nonlinear_de, 
+def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de, 
 				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False,
 				solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# solves for the nonlinear fields using Newton's method
@@ -108,7 +107,7 @@ def newton_solve(simulation, b, nl_region, nonlinear_fn, nonlinear_de,
 
 			Eprev = Ez
 
-			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, nl_region, nonlinear_fn, nonlinear_de, 
+			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de, 
 											Ez=Eprev, matrix_format=matrix_format)
 
 			# Note: Newton's method is defined as a linear problem to avoid inverting the Jacobian
@@ -147,12 +146,11 @@ def newton_solve(simulation, b, nl_region, nonlinear_fn, nonlinear_de,
 
 		# Solve iteratively
 		for istep in range(max_num_iter):
-			print(istep)
 
 			Exprev = Ex
 			Eyprev = Ey
 
-			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, nl_region, nonlinear_fn, nonlinear_de, 
+			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de, 
 											Ex=Exprev, Ey=Eyprev, matrix_format=matrix_format, averaging=averaging)
 
 			# Note: Newton's method is defined as a linear problem to avoid inverting the Jacobian
@@ -182,7 +180,7 @@ def newton_solve(simulation, b, nl_region, nonlinear_fn, nonlinear_de,
 			
 		return (Ex, Ey, Hz, conv_array)
 
-def nl_eq_and_jac(simulation, b, eps_lin, nl_region, nonlinear_fn, nonlinear_de, averaging=False,
+def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de, averaging=False,
 				Ex=None, Ey=None, Ez=None, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# Evaluates the nonlinear function f(E) that defines the problem to solve f(E) = 0, as well as the Jacobian df/dE
 	# Could add a check that only Ez is None for Hz polarization and vice-versa
@@ -234,13 +232,23 @@ def nl_eq_and_jac(simulation, b, eps_lin, nl_region, nonlinear_fn, nonlinear_de,
 		Exy = np.vstack((Ex.reshape((Nbig,1)), Ey.reshape((Nbig,1))))
 		eps_xy = np.vstack((vector_eps_x, vector_eps_y))
 
-		Anl = Anl - omega**2*sp.spdiags((Exy*eps_xy).reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format) 
-		fE = Anl.dot(Exy) + np.vstack((Dyb.dot(b.reshape((Nbig, 1))), -Dxb.dot(b.reshape((Nbig, 1)))))/MU_0_
+		Anl = Anl - omega**2*sp.spdiags(eps_xy.reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format) 
+		fE = Anl.dot(Exy) - np.vstack((Dyb.dot(b.reshape((Nbig, 1))), -Dxb.dot(b.reshape((Nbig, 1)))))/MU_0_
 
-		dAdex = -(nonlinear_de(Ex)*nl_region_x).reshape((Nbig,1))*omega**2*EPSILON_0_ 
-		dAdey = -(nonlinear_de(Ey)*nl_region_y).reshape((Nbig,1))*omega**2*EPSILON_0_ 
+		dAdex = -(nonlinear_de(Ex)*nl_region_x).reshape((-1,))*omega**2*EPSILON_0_ 
+		dAdey = -(nonlinear_de(Ey)*nl_region_y).reshape((-1,))*omega**2*EPSILON_0_ 
 
-		Jac11 = Anl + sp.spdiags((np.vstack((dAdex, dAdey))*Exy).reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format)
-		Jac12 = sp.spdiags((np.conj(np.vstack((dAdex, dAdey)))*Exy).reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format)
+		Jac11xx = sp.spdiags(dAdex*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac11xy = sp.spdiags(dAdex*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac11yx = sp.spdiags(dAdey*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac11yy = sp.spdiags(dAdey*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+
+		Jac12xx = sp.spdiags(np.conj(dAdex)*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac12xy = sp.spdiags(np.conj(dAdex)*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac12yx = sp.spdiags(np.conj(dAdey)*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+		Jac12yy = sp.spdiags(np.conj(dAdey)*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
+
+		Jac11 = Anl + sp.vstack((sp.hstack((Jac11xx, Jac11xy)), sp.hstack((Jac11yx, Jac11yy))))
+		Jac12 = sp.vstack((sp.hstack((Jac12xx, Jac12xy)), sp.hstack((Jac12yx, Jac12yy))))
 
 	return(fE, Jac11, Jac12)
