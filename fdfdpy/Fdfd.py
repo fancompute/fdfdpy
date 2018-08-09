@@ -121,7 +121,7 @@ class Fdfd:
 			# if born solver
 			if solver_nl == 'born':
 
-				(Hx, Hy, Ez, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Hx, Hy, Ez, conv_array) = born_solve(self, b, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
 			
 			# if newton solver
 			elif solver_nl == 'newton':
@@ -130,7 +130,7 @@ class Fdfd:
 				if dnl_de is None:
 					raise ValueError("'dnl_de' argument must be set to run Newton solve")
 
-				(Hx, Hy, Ez, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Hx, Hy, Ez, conv_array) = newton_solve(self, b, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# incorrect solver_nl argument
 			else:
@@ -145,7 +145,7 @@ class Fdfd:
 			# if born solver
 			if solver_nl == 'born':
 			
-				(Ex, Ey, Hz, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Ex, Ey, Hz, conv_array) = born_solve(self, b, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# if newton solver
 			elif solver_nl == 'newton':
@@ -153,8 +153,7 @@ class Fdfd:
 				# newton needs the derivative of the nonlinearity.
 				if dnl_de is None:
 					raise ValueError("'dnl_de' argument must be set to run Newton solve")
-
-				(Ex, Ey, Hz, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Ex, Ey, Hz, conv_array) = newton_solve(self, b, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# incorrect solver_nl argument
 			else:
