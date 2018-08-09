@@ -7,6 +7,7 @@ from fdfdpy.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs
 from fdfdpy.constants import *
 from fdfdpy.plot import plt_base, plt_base_eps
 from fdfdpy.nonlinear_solvers import born_solve, newton_solve
+from fdfdpy.source.mode import mode
 
 class Fdfd:
 
@@ -26,6 +27,7 @@ class Fdfd:
 		self.Nx = Nx
 		self.Ny = Ny
 		self.mu_r = np.ones((self.Nx,self.Ny))
+		self.src  = np.zeros((self.Nx,self.Ny))
 		self.xrange = [0, float(Nx*self.dl)]
 		self.yrange = [0, float(Ny*self.dl)]
 		
@@ -36,6 +38,20 @@ class Fdfd:
 		self.A = A
 		self.derivs = derivs
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
+		self.modes = [];
+
+
+	def setup_modes(self):
+		# calculates 
+
+		for mode in self.modes:
+			mode.setup_src(self)
+
+
+	def add_mode(self, neff, direction_normal, center, width):
+		# adds a mode definition to the simulation
+
+		self.modes.append( mode(neff, direction_normal, center, width) )
 
 
 	def reset_eps(self, new_eps):
@@ -50,9 +66,11 @@ class Fdfd:
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
-	def solve_fields(self, b, timing=False, averaging=False, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
+	def solve_fields(self, timing=False, averaging=False, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# performs direct solve for A given source b
 		# (!) NOTE: b is now a current density in units of [Amps/L0^2] (for the Ez case)
+
+		b = self.src
 
 		EPSILON_0_ = EPSILON_0*self.L0
 		MU_0_ = MU_0*self.L0
@@ -104,11 +122,12 @@ class Fdfd:
 		else:
 			raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
-
-	def solve_fields_nl(self, b, nonlinear_fn, nl_region, dnl_de=None, timing=False, averaging=False,
+	def solve_fields_nl(self, nonlinear_fn, nl_region, dnl_de=None, timing=False, averaging=False,
 						Estart=None, solver_nl='born', conv_threshold=1e-10, max_num_iter=50,
 						solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# solves for the nonlinear fields of the simulation.
+
+		b = self.src
 
 		# store the original permittivity
 		eps_orig = copy.deepcopy(self.eps_r)

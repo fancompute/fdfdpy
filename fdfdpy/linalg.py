@@ -127,7 +127,7 @@ def solver_direct(A, b, timing=False, solver=DEFAULT_SOLVER):
 	b = b.reshape((-1,))
 
 	if not b.any():
-		return zeros(b.shape)
+		return np.zeros(b.shape)
 
 	if timing:
 		t = time()
