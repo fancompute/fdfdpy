@@ -31,15 +31,16 @@ class mode:
 		Dxb = createDws('x', 'b', [simulation.dl], [N], matrix_format=matrix_format)
 		Dxf = createDws('x', 'f', [simulation.dl], [N], matrix_format=matrix_format)
 
-		vector_eps_z = EPSILON_0_*eps_r.reshape((-1,))
-		T_eps = sp.spdiags(vector_eps_z, 0, N, N, format=matrix_format)
+		vector_eps = EPSILON_0_*eps_r.reshape((-1,))
+		vector_eps_x = EPSILON_0_*grid_average(eps_r,'x').reshape((-1,))
+		T_eps = sp.spdiags(vector_eps, 0, N, N, format=matrix_format)
+		T_epsxinv = sp.spdiags(vector_eps_x**(-1), 0, N, N, format=matrix_format)
 
-		if simulation.pol == "Ez":
+		if simulation.pol == 'Ez':
 			A = np.square(simulation.omega)*MU_0_*T_eps + Dxf.dot(Dxb)
 
-		elif simulation.pol == "Hz":
-			A = np.square(simulation.omega)*MU_0_*T_eps + Dxf.dot(Dxb)
-			# A = ω^2*μ₀*Tϵ + Tϵ*δxf*Tϵxinv*δxb
+		elif simulation.pol == 'Hz':
+			A = np.square(simulation.omega)*MU_0_*T_eps + T_eps.dot(Dxf).dot(T_epsxinv).dot(Dxb)
 
 		est_beta = simulation.omega*np.sqrt(MU_0_*EPSILON_0_)*self.neff
 		(vals, vecs) = solver_eigs(A, 1, guess_value=np.square(est_beta))
