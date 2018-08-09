@@ -26,15 +26,33 @@ Creating a new Fdfd object solves for:
 - `A` : the Maxwell operator, which is used later to solve for the E&M fields.
 - `derivs` : dictionary storing the derivative operators.
 
-It also creates a relative permeability, `mu_r`, as `numpy.ones(eps_r.shape)`. 
+It also creates a relative permeability, `mu_r`, as `numpy.ones(eps_r.shape)` and a source `src` as ``numpy.zeros(eps_r.shape). 
+
+### Adding sources is exciting!
+
+Sources can be added to the simulation either by manually editing the 2D src array inside of the simulation object,
+
+	simulation.src[10,20:30] = 1
+
+or by adding modal sources, which are defined as planes within the 2D domain which launch a mode in their normal direction. Modal source definitions can be added to the simulation by
+
+	simulation.add_mode(neff, direction, center, width)
+	simulation.setup_modes()
+
+- `neff` : defines the effective index of the mode; this will be used as the eigenvalue guess
+- `direction` : defines the normal direction of the plane, should be either 'x' or 'y'
+- `center` : defines the center coordinates for the plane in cell coordinates [xc, yc]
+- `width` : defines the width of the plane in number of cells
+
+Note that `simulation.setup_modes()` must always be called after adding mode(s) in order to populate `simulation.src`.
 
 ### Solving for the electromagnetic fields
 
 Now, we have everything we need to solve the system for the electromagnetic fields, by running
 
-	fields = simulation.solve_fields(b, timing=False)
+	fields = simulation.solve_fields(timing=False)
 	
-`b` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.  PLEASE NOTE: `b` is exacly the source for `Ax = b`, it is not a current density!.  `b.shape` must be `(Nx,Ny)`.
+`simulation.src` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.
 
 `fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
 
@@ -44,8 +62,7 @@ If you want to change the permittivity distribution, you may run
 
 	simulation.reset_eps(new_eps)
 
-And this will reconstruct the system matrix and store it in `FDFD`.
-
+And this will reconstruct the system matrix and store it in `FDFD`. Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources.
 
 ### Plotting
 
