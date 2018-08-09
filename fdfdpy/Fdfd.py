@@ -117,29 +117,56 @@ class Fdfd:
 		if nonlinear_fn is None or nl_region is None:
 			raise ValueError("'nonlinear_fn' and 'nl_region' must be supplied")
 
-		# if born solver
-		if solver_nl == 'born':
+		if self.pol == 'Ez':
+			# if born solver
+			if solver_nl == 'born':
 
-			(Hx, Hy, Ez, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter)
-
-		# if newton solver
-		elif solver_nl == 'newton':
-
-			# newton needs the derivative of the nonlinearity.
-			if dnl_de is None:
-				raise ValueError("'dnl_de' argument must be set to run Newton solve")
+				(Hx, Hy, Ez, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter, averaging=averaging)
 			
-			(Hx, Hy, Ez, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter)
+			# if newton solver
+			elif solver_nl == 'newton':
 
-		# incorrect solver_nl argument
+				# newton needs the derivative of the nonlinearity.
+				if dnl_de is None:
+					raise ValueError("'dnl_de' argument must be set to run Newton solve")
+
+				(Hx, Hy, Ez, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+
+			# incorrect solver_nl argument
+			else:
+				raise AssertionError("solver must be one of {'born', 'newton'}")
+
+			# reset the permittivity to the original value
+			self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
+			# return final nonlinear fields and an array of the norm convergences
+			return (Hx, Hy, Ez, conv_array)
+
+		elif self.pol == 'Hz':
+			# if born solver
+			if solver_nl == 'born':
+			
+				(Ex, Ey, Hz, conv_array) = born_solve(self, b, nl_region, nonlinear_fn, Estart, conv_threshold, max_num_iter, averaging=averaging)
+
+			# if newton solver
+			elif solver_nl == 'newton':
+
+				# newton needs the derivative of the nonlinearity.
+				if dnl_de is None:
+					raise ValueError("'dnl_de' argument must be set to run Newton solve")
+
+				(Ex, Ey, Hz, conv_array) = newton_solve(self, b, nl_region, nonlinear_fn, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+
+			# incorrect solver_nl argument
+			else:
+				raise AssertionError("solver must be one of {'born', 'newton'}")
+
+			# reset the permittivity to the original value
+			self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
+			# return final nonlinear fields and an array of the norm convergences
+			return (Ex, Ey, Hz, conv_array)
+
 		else:
-			raise AssertionError("solver must be one of {'born', 'newton'}")
-
-		# reset the permittivity to the original value
-		self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
-
-		# return final nonlinear fields and an array of the norm convergences
-		return (Hx, Hy, Ez, conv_array)
+			raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
 
 	def _check_inputs(self):
