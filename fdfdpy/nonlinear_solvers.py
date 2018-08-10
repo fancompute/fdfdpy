@@ -9,7 +9,7 @@ from fdfdpy.constants import *
 
 # Note: for both solvers, the simulation object must have been initialized with the linear permittivity eps_r
 
-def born_solve(simulation, nonlinear_fn, nl_region, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False):
+def born_solve(simulation, nonlinear_fn, nl_region, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=True):
 	# solves for the nonlinear fields using direct substitution / Born approximation / Picard / whatever you want to call it
 
 	# Stores convergence parameters
@@ -83,7 +83,7 @@ def born_solve(simulation, nonlinear_fn, nl_region, Estart=None, conv_threshold=
 
 
 def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de, 
-				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False,
+				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=True,
 				solver=DEFAULT_SOLVER, jac_solver='c2r', matrix_format=DEFAULT_MATRIX_FORMAT):
 	# solves for the nonlinear fields using Newton's method
 
@@ -178,7 +178,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 			
 		return (Ex, Ey, Hz, conv_array)
 
-def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de, averaging=False,
+def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de, averaging=True,
 				Ex=None, Ey=None, Ez=None, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# Evaluates the nonlinear function f(E) that defines the problem to solve f(E) = 0, as well as the Jacobian df/dE
 	# Could add a check that only Ez is None for Hz polarization and vice-versa
@@ -229,13 +229,12 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
 		Anl = Anl - omega**2*sp.spdiags(eps_xy.reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format) 
 		fE = Anl.dot(Exy) - np.vstack((Dyb.dot(b.reshape((Nbig, 1))), -Dxb.dot(b.reshape((Nbig, 1)))))/MU_0_
 
-		# if averaging:
-		# 	dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_ 
-		#	dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_ 
-		# else:
-
-		dAdex = -(nonlinear_de(Ex)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
-		dAdey = -(nonlinear_de(Ey)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
+		if averaging:
+			dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_ 
+			dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_ 
+		else:
+			dAdex = -(nonlinear_de(Ex)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
+			dAdey = -(nonlinear_de(Ey)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
 
 		Jac11xx = sp.spdiags(dAdex*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 		Jac11xy = sp.spdiags(dAdex*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
