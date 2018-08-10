@@ -63,13 +63,13 @@ def S_create(omega, L0, N, Npml, xrange, yrange=None, matrix_format=DEFAULT_MATR
 	Sy_f_2D = zeros(N, dtype=complex128)
 	Sy_b_2D = zeros(N, dtype=complex128)
 
-	for i in range(0, Nx):
-		Sy_f_2D[:, i] = 1/s_vector_y_f
-		Sy_b_2D[:, i] = 1/s_vector_y_b
+	for i in range(0, Ny):
+		Sx_f_2D[:, i] = 1/s_vector_x_f
+		Sx_b_2D[:, i] = 1/s_vector_x_b
 
-	for j in range(0, Ny):
-		Sx_f_2D[j, :] = 1/s_vector_x_f
-		Sx_b_2D[j, :] = 1/s_vector_x_b
+	for i in range(0, Nx):
+		Sy_f_2D[i, :] = 1/s_vector_y_f
+		Sy_b_2D[i, :] = 1/s_vector_y_b
 
 	# Reshape the 2D s-factors into a 1D s-array
 	Sx_f_vec = Sx_f_2D.reshape((-1,))
