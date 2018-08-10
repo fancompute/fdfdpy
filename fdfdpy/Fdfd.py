@@ -46,8 +46,8 @@ class Fdfd:
 	def setup_modes(self):
 		# calculates
 
-		for mode in self.modes:
-			mode.setup_src(self)
+		for modei in self.modes:
+			modei.setup_src(self)
 
 
 	def add_mode(self, neff, direction_normal, center, width):
