@@ -72,7 +72,7 @@ class Fdfd:
 		EPSILON_0_ = EPSILON_0*self.L0
 		MU_0_ = MU_0*self.L0
 
-		X = solver_direct(self.A, self.src, timing=timing, solver=solver)
+		X = solver_direct(self.A, self.src*1j*self.omega, timing=timing, solver=solver)
 
 		(Nx,Ny) = self.src.shape
 		M = Nx*Ny
@@ -136,7 +136,7 @@ class Fdfd:
 			# if born solver
 			if solver_nl == 'born':
 
-				(Hx, Hy, Ez, conv_array) = born_solve(self, self.src*1j*simulation.omega, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Hx, Hy, Ez, conv_array) = born_solve(self, self.src*1j*self.omega, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
 			
 			# if newton solver
 			elif solver_nl == 'newton':
@@ -145,7 +145,7 @@ class Fdfd:
 				if dnl_de is None:
 					raise ValueError("'dnl_de' argument must be set to run Newton solve")
 
-				(Hx, Hy, Ez, conv_array) = newton_solve(self, self.src*1j*simulation.omega, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Hx, Hy, Ez, conv_array) = newton_solve(self, self.src*1j*self.omega, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# incorrect solver_nl argument
 			else:
@@ -160,7 +160,7 @@ class Fdfd:
 			# if born solver
 			if solver_nl == 'born':
 			
-				(Ex, Ey, Hz, conv_array) = born_solve(self, self.src*1j*simulation.omega, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Ex, Ey, Hz, conv_array) = born_solve(self, self.src*1j*self.omega, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# if newton solver
 			elif solver_nl == 'newton':
@@ -168,7 +168,7 @@ class Fdfd:
 				# newton needs the derivative of the nonlinearity.
 				if dnl_de is None:
 					raise ValueError("'dnl_de' argument must be set to run Newton solve")
-				(Ex, Ey, Hz, conv_array) = newton_solve(self, self.src*1j*simulation.omega, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+				(Ex, Ey, Hz, conv_array) = newton_solve(self, self.src*1j*self.omega, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# incorrect solver_nl argument
 			else:
