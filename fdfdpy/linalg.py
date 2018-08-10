@@ -154,15 +154,15 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
 	
 	b = b.astype(np.complex128)
 	b = b.reshape((-1,))
+	N = b.size
 
 	if not b.any():
 		return zeros(b.shape)
 
-	b_re = np.real(b)
-	b_im = np.imag(b)
-	Areal = np.vstack((np.hstack((np.real(A11) + np.real(A12), -np.imag(A11) + np.imag(A12))), \
-		np.hstack((np.imag(A11) + np.imag(A12), np.real(A11) - np.real(A12)))))
-	Areal.astype(np.real64)
+	b_re = np.real(b).astype(np.float64)
+	b_im = np.imag(b).astype(np.float64)
+	Areal = sp.vstack((sp.hstack((np.real(A11) + np.real(A12), -np.imag(A11) + np.imag(A12))), \
+		sp.hstack((np.imag(A11) + np.imag(A12), np.real(A11) - np.real(A12)))))
 
 	if timing:
 		t = time()
@@ -170,11 +170,11 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
 	if solver.lower() == 'pardiso':
 		pSolve = pardisoSolver(Areal, mtype=11) # Matrix is real unsymmetric
 		pSolve.factor()
-		x = pSolve.solve(np.vstackb)
+		x = pSolve.solve(np.hstack((b_re, b_im)))
 		pSolve.clear()
 
 	elif solver.lower() == 'scipy':
-		x = spl.spsolve(A, b)
+		x = spl.spsolve(Areal, np.hstack((b_re, b_im)))
 
 	else:
 		raise ValueError('Invalid solver choice: {}, options are pardiso or scipy'.format(str(solver)))
@@ -182,4 +182,4 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
 	if timing:
 		print('Linear system solve took {:.2f} seconds'.format(time()-t))
 
-	return x
+	return (x[:N] + 1j*x[N:2*N])

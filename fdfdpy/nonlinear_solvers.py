@@ -3,7 +3,7 @@ import scipy.sparse as sp
 
 import copy
 
-from fdfdpy.linalg import solver_direct, grid_average
+from fdfdpy.linalg import solver_direct, grid_average, solver_complex2real
 from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.constants import *
 
@@ -84,7 +84,7 @@ def born_solve(simulation, nonlinear_fn, nl_region, Estart=None, conv_threshold=
 
 def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de, 
 				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False,
-				solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
+				solver=DEFAULT_SOLVER, jac_solver='c2r', matrix_format=DEFAULT_MATRIX_FORMAT):
 	# solves for the nonlinear fields using Newton's method
 
 	eps_lin = simulation.eps_r
@@ -114,9 +114,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 			# Note: Newton's method is defined as a linear problem to avoid inverting the Jacobian
 			# Namely, J*(x_n - x_{n-1}) = -f(x_{n-1}), where J = df/dx(x_{n-1})
 
-			fx_full = np.vstack((fx, np.conj(fx)))
-			Jac_full = sp.vstack((sp.hstack((Jac11, Jac12)), np.conj(sp.hstack((Jac12, Jac11)))))
-			Ediff = solver_direct(Jac_full, fx_full, solver=solver)
+			Ediff = solver_complex2real(Jac11, Jac12, fx, solver=solver, timing=False)
 			Ez = Eprev - Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
 
 			# get convergence and break
@@ -157,9 +155,8 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 			# Note: Newton's method is defined as a linear problem to avoid inverting the Jacobian
 			# Namely, J*(x_n - x_{n-1}) = -f(x_{n-1}), where J = df/dx(x_{n-1})
 
-			fx_full = np.vstack((fx, np.conj(fx)))
-			Jac_full = sp.vstack((sp.hstack((Jac11, Jac12)), np.conj(sp.hstack((Jac12, Jac11)))))
-			Ediff = solver_direct(Jac_full, fx_full, solver=solver)
+			Ediff = solver_complex2real(Jac11, Jac12, fx, solver=solver, timing=False)
+
 			Ex = Exprev - Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
 			Ey = Eyprev - Ediff[range(Nbig, 2*Nbig)].reshape(simulation.Nx, simulation.Ny)
 
@@ -232,12 +229,13 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
 		Anl = Anl - omega**2*sp.spdiags(eps_xy.reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format) 
 		fE = Anl.dot(Exy) - np.vstack((Dyb.dot(b.reshape((Nbig, 1))), -Dxb.dot(b.reshape((Nbig, 1)))))/MU_0_
 
-		if averaging:
-			dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_ 
-			dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_ 
-		else:
-			dAdex = -(nonlinear_de(Ex)*nl_region_x).reshape((-1,))*omega**2*EPSILON_0_ 
-			dAdey = -(nonlinear_de(Ey)*nl_region_y).reshape((-1,))*omega**2*EPSILON_0_ 
+		# if averaging:
+		# 	dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_ 
+		#	dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_ 
+		# else:
+
+		dAdex = -(nonlinear_de(Ex)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
+		dAdey = -(nonlinear_de(Ey)*nl_region).reshape((-1,))*omega**2*EPSILON_0_ 
 
 		Jac11xx = sp.spdiags(dAdex*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 		Jac11xy = sp.spdiags(dAdex*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
