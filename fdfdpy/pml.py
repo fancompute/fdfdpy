@@ -1,6 +1,6 @@
-from numpy import array, ones, zeros, diff, prod, isscalar, complex128
+from numpy import array, ones, zeros, diff, prod, isscalar, complex128, append
 from scipy.sparse import spdiags
-from fdfdpy.constants import *
+from fdfdpy.constants import DEFAULT_MATRIX_FORMAT, EPSILON_0, ETA_0
 
 
 def _sig_w(l, dw, m=4, lnR=-12):

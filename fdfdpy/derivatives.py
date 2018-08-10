@@ -1,5 +1,7 @@
+from fdfdpy.constants import DEFAULT_MATRIX_FORMAT
 from scipy.sparse import diags, kron, eye
-from fdfdpy.constants import *
+from numpy import inf
+
 
 def createDws(w, s, dL, N, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# creates the derivative matrices
@@ -13,7 +15,7 @@ def createDws(w, s, dL, N, matrix_format=DEFAULT_MATRIX_FORMAT):
 		dy = dL[1]
 	else:
 		Ny = 1
-		dy = np.inf
+		dy = inf
 	if w is 'x':
 		if s is 'f':
 			dxf = diags([-1, 1, 1], [0, 1, -Nx+1], shape=(Nx, Nx))

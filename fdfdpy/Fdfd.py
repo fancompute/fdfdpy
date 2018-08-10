@@ -1,13 +1,15 @@
-import numpy as np
-import scipy.sparse as sp
-
-import copy
-
-from fdfdpy.linalg import construct_A, solver_direct, solver_eigs, unpack_derivs, grid_average
-from fdfdpy.constants import *
+from fdfdpy.constants import DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT, DEFAULT_SOLVER
+from fdfdpy.constants import EPSILON_0, MU_0
+from fdfdpy.linalg import construct_A, solver_direct, grid_average
+from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.plot import plt_base, plt_base_eps
 from fdfdpy.nonlinear_solvers import born_solve, newton_solve
 from fdfdpy.source.mode import mode
+
+from numpy import ones, zeros, abs, real
+from scipy.sparse import spdiags
+from copy import deepcopy
+
 
 class Fdfd:
 
@@ -20,20 +22,20 @@ class Fdfd:
 		self.eps_r = eps_r
 		self.NPML = [int(n) for n in NPML]
 		self.pol = pol
-		
+
 		self._check_inputs()
-		
+
 		(Nx,Ny) = eps_r.shape
 		self.Nx = Nx
 		self.Ny = Ny
-		self.mu_r = np.ones((self.Nx,self.Ny))
-		self.src  = np.zeros((self.Nx,self.Ny))
+		self.mu_r = ones((self.Nx,self.Ny))
+		self.src  = zeros((self.Nx,self.Ny))
 		self.xrange = [0, float(Nx*self.dl)]
 		self.yrange = [0, float(Ny*self.dl)]
-		
+
 		# construct the system matrix
 		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol, self.L0,
-								matrix_format=DEFAULT_MATRIX_FORMAT, 
+								matrix_format=DEFAULT_MATRIX_FORMAT,
 								timing=False)
 		self.A = A
 		self.derivs = derivs
@@ -42,7 +44,7 @@ class Fdfd:
 
 
 	def setup_modes(self):
-		# calculates 
+		# calculates
 
 		for mode in self.modes:
 			mode.setup_src(self)
@@ -59,7 +61,7 @@ class Fdfd:
 
 		self.eps_r = new_eps
 		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
-								matrix_format=DEFAULT_MATRIX_FORMAT, 
+								matrix_format=DEFAULT_MATRIX_FORMAT,
 								timing=False)
 		self.A = A
 		self.derivs = derivs
@@ -76,7 +78,7 @@ class Fdfd:
 
 		(Nx,Ny) = self.src.shape
 		M = Nx*Ny
-		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)	
+		(Dyb, Dxb, Dxf, Dyf) = unpack_derivs(self.derivs)
 
 		if self.pol == 'Hz':
 			if averaging:
@@ -85,10 +87,10 @@ class Fdfd:
 			else:
 				vector_eps_x = EPSILON_0_*self.eps_r.reshape((-1,))
 				vector_eps_y = EPSILON_0_*self.eps_r.reshape((-1,))
-			
-			T_eps_x_inv = sp.spdiags(1/vector_eps_x, 0, M, M, format=matrix_format)
-			T_eps_y_inv = sp.spdiags(1/vector_eps_y, 0, M, M, format=matrix_format)
-			
+
+			T_eps_x_inv = spdiags(1/vector_eps_x, 0, M, M, format=matrix_format)
+			T_eps_y_inv = spdiags(1/vector_eps_y, 0, M, M, format=matrix_format)
+
 			ex = -1/1j/self.omega * T_eps_x_inv.dot(Dyb).dot(X)
 			ey =  1/1j/self.omega * T_eps_x_inv.dot(Dxb).dot(X)
 
@@ -126,8 +128,8 @@ class Fdfd:
 		# solves for the nonlinear fields of the simulation.
 
 		# store the original permittivity
-		eps_orig = copy.deepcopy(self.eps_r)
-		
+		eps_orig = deepcopy(self.eps_r)
+
 		# if the nonlinear objects were not supplied, throw an error
 		if nonlinear_fn is None or nl_region is None:
 			raise ValueError("'nonlinear_fn' and 'nl_region' must be supplied")
@@ -137,7 +139,7 @@ class Fdfd:
 			if solver_nl == 'born':
 
 				(Hx, Hy, Ez, conv_array) = born_solve(self, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
-			
+
 			# if newton solver
 			elif solver_nl == 'newton':
 
@@ -159,7 +161,7 @@ class Fdfd:
 		elif self.pol == 'Hz':
 			# if born solver
 			if solver_nl == 'born':
-			
+
 				(Ex, Ey, Hz, conv_array) = born_solve(self, nonlinear_fn, nl_region, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
 			# if newton solver
@@ -185,13 +187,13 @@ class Fdfd:
 
 	def _check_inputs(self):
 		# checks the inputs and makes sure they are kosher
-		
+
 		assert self.L0 > 0, "L0 must be a positive number, was supplied {},".format(str(self.L0))
 		assert len(self.NPML) == 2, "yrange must be a list of length 2, was supplied {}, which is of length {}".format(str(self.NPML), len(self.NPML))
 		assert self.NPML[0] >= 0 and self.NPML[1] >= 0, "both elements of NPML must be >= 0"
-		
+
 		assert self.pol in ['Ez','Hz'], "pol must be one of 'Ez' or 'Hz'"
-		
+
 		# to do, check for correct types as well.
 
 
@@ -201,8 +203,8 @@ class Fdfd:
 		if self.fields[self.pol] is None:
 			raise ValueError("need to solve the simulation first")
 
-		field_val = np.abs( self.fields[self.pol] )
-		outline_val = np.abs( self.eps_r )
+		field_val = abs( self.fields[self.pol] )
+		outline_val = abs( self.eps_r )
 		vmin = 0.0
 		vmax = field_val.max()
 		cmap = "magma"
@@ -215,10 +217,10 @@ class Fdfd:
 		if self.fields[self.pol] is None:
 			raise ValueError("need to solve the simulation first")
 
-		field_val = np.real( self.fields[self.pol] )
-		outline_val = np.abs( self.eps_r )
-		vmin = -np.abs(field_val).max()
-		vmax = +np.abs(field_val).max()
+		field_val = real( self.fields[self.pol] )
+		outline_val = abs( self.eps_r )
+		vmin = -abs(field_val).max()
+		vmax = +abs(field_val).max()
 		cmap = "RdBu"
 
 		return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol, cbar=cbar, outline=outline, ax=ax)
@@ -226,10 +228,10 @@ class Fdfd:
 	def plt_eps(self, cbar=True, outline=True, ax=None):
 		# plot the permittivity distribution
 
-		eps_val = np.abs(self.eps_r)
-		outline_val = np.abs(self.eps_r)
+		eps_val = abs(self.eps_r)
+		outline_val = abs(self.eps_r)
 		vmin = 1
-		vmax = np.abs(self.eps_r).max()
+		vmax = abs(self.eps_r).max()
 		cmap = "Greys"
 
 		return plt_base_eps(eps_val, outline_val, cmap, vmin, vmax, cbar=cbar, outline=outline, ax=ax)
