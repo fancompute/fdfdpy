@@ -26,7 +26,7 @@ Creating a new Fdfd object solves for:
 - `A` : the Maxwell operator, which is used later to solve for the E&M fields.
 - `derivs` : dictionary storing the derivative operators.
 
-It also creates a relative permeability, `mu_r`, as `numpy.ones(eps_r.shape)` and a source `src` as ``numpy.zeros(eps_r.shape). 
+It also creates a relative permeability, `mu_r`, as `numpy.ones(eps_r.shape)` and a source `src` as `numpy.zeros(eps_r.shape)`.
 
 ### Adding sources is exciting!
 
@@ -51,7 +51,7 @@ Note that `simulation.setup_modes()` must always be called after adding mode(s) 
 Now, we have everything we need to solve the system for the electromagnetic fields, by running
 
 	fields = simulation.solve_fields(timing=False)
-	
+
 `simulation.src` is proportional to either the `Jz` or `Mz` source term, depending on whether `pol` is set to `'Ez'` or `'Hz'`, respectively.
 
 `fields` is a tuple containing `(Ex, Ey, Hz)` or `(Hx, Hy, Ez)` depending on the polarization.
