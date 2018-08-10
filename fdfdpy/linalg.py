@@ -149,3 +149,37 @@ def solver_direct(A, b, timing=False, solver=DEFAULT_SOLVER):
 
 	return x
 
+def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
+	# solves linear system of equations [A11, A12; A21*, A22*]*[x; x*] = [b; b*]
+	
+	b = b.astype(np.complex128)
+	b = b.reshape((-1,))
+
+	if not b.any():
+		return zeros(b.shape)
+
+	b_re = np.real(b)
+	b_im = np.imag(b)
+	Areal = np.vstack((np.hstack((np.real(A11) + np.real(A12), -np.imag(A11) + np.imag(A12))), \
+		np.hstack((np.imag(A11) + np.imag(A12), np.real(A11) - np.real(A12)))))
+	Areal.astype(np.real64)
+
+	if timing:
+		t = time()
+
+	if solver.lower() == 'pardiso':
+		pSolve = pardisoSolver(Areal, mtype=11) # Matrix is real unsymmetric
+		pSolve.factor()
+		x = pSolve.solve(np.vstackb)
+		pSolve.clear()
+
+	elif solver.lower() == 'scipy':
+		x = spl.spsolve(A, b)
+
+	else:
+		raise ValueError('Invalid solver choice: {}, options are pardiso or scipy'.format(str(solver)))
+
+	if timing:
+		print('Linear system solve took {:.2f} seconds'.format(time()-t))
+
+	return x

@@ -9,18 +9,18 @@ from fdfdpy.constants import *
 
 # Note: for both solvers, the simulation object must have been initialized with the linear permittivity eps_r
 
-def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False):
+def born_solve(simulation, nonlinear_fn, nl_region, Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False):
 	# solves for the nonlinear fields using direct substitution / Born approximation / Picard / whatever you want to call it
 
 	# Stores convergence parameters
 	conv_array = np.zeros((max_num_iter, 1))
-	
+
 	eps_lin = simulation.eps_r
 
 	if simulation.pol == 'Ez':
 		# Defne the starting field for the simulation
 		if Estart is None:
-			(Hx,Hy,Ez) = simulation.solve_fields(b)
+			(Hx,Hy,Ez) = simulation.solve_fields()
 		else: 
 			Ez = Estart['Ez']	
 
@@ -34,7 +34,7 @@ def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_thresho
 
 			# get new fields
 			simulation.reset_eps(eps_nl)
-			(Hx, Hy, Ez) = simulation.solve_fields(b)
+			(Hx, Hy, Ez) = simulation.solve_fields()
 
 			# get convergence and break
 			convergence = np.linalg.norm(Ez - Eprev)/np.linalg.norm(Ez)
@@ -51,7 +51,7 @@ def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_thresho
 	elif simulation.pol == 'Hz':
 		# Defne the starting field for the simulation
 		if Estart is None:
-			(Ex,Ey,Hz) = simulation.solve_fields(b, averaging=averaging)
+			(Ex,Ey,Hz) = simulation.solve_fields(averaging=averaging)
 		else: 
 			Ex = Estart['Ex']
 			Ey = Estart['Ey']		
@@ -67,7 +67,7 @@ def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_thresho
 
 			# get new fields
 			simulation.reset_eps(eps_nl)
-			(Ex, Ey, Hz) = simulation.solve_fields(b, averaging=averaging)
+			(Ex, Ey, Hz) = simulation.solve_fields(averaging=averaging)
 
 			# get convergence and break
 			convergence = np.linalg.norm(Ex - Exprev)/np.linalg.norm(Ex) + np.linalg.norm(Ey - Eyprev)/np.linalg.norm(Ey)
@@ -82,12 +82,13 @@ def born_solve(simulation, b, nonlinear_fn, nl_region, Estart=None, conv_thresho
 		return (Ex, Ey, Hz, conv_array)
 
 
-def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de, 
+def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de, 
 				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=False,
 				solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 	# solves for the nonlinear fields using Newton's method
 
 	eps_lin = simulation.eps_r
+	b = simulation.src
 
 	# Stores convergence parameters
 	conv_array = np.zeros((max_num_iter, 1))
@@ -98,7 +99,7 @@ def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de,
 	if simulation.pol == 'Ez':
 		# Defne the starting field for the simulation
 		if Estart is None:
-			(Hx,Hy,Ez) = simulation.solve_fields(b)
+			(Hx,Hy,Ez) = simulation.solve_fields()
 		else: 
 			Ez = Estart
 
@@ -129,7 +130,7 @@ def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de,
 		# Solve the fdfd problem with the final eps_nl
 		eps_nl = eps_lin + (nonlinear_fn(Ez)*nl_region)
 		simulation.reset_eps(eps_nl)
-		(Hx, Hy, Ez) = simulation.solve_fields(b)
+		(Hx, Hy, Ez) = simulation.solve_fields()
 
 		if convergence > conv_threshold:
 			print("the simulation did not converge, reached {}".format(convergence))
@@ -139,7 +140,7 @@ def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de,
 	elif simulation.pol == 'Hz':
 		# Defne the starting field for the simulation
 		if Estart is None:
-			(Ex,Ey,Hz) = simulation.solve_fields(b, averaging=averaging)
+			(Ex,Ey,Hz) = simulation.solve_fields(averaging=averaging)
 		else: 
 			Ex = Estart['Ex']
 			Ey = Estart['Ey']
@@ -173,7 +174,7 @@ def newton_solve(simulation, b, nonlinear_fn, nl_region, nonlinear_de,
 		# Solve the fdfd problem with the final eps_nl
 		eps_nl = eps_lin + (nonlinear_fn(Exprev) + nonlinear_fn(Eyprev))*nl_region 
 		simulation.reset_eps(eps_nl)
-		(Hx, Hy, Ez) = simulation.solve_fields(b, averaging=averaging)
+		(Hx, Hy, Ez) = simulation.solve_fields(averaging=averaging)
 
 		if convergence > conv_threshold:
 			print("the simulation did not converge, reached {}".format(convergence))
@@ -215,13 +216,9 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
 		if averaging:
 			vector_eps_x = grid_average(EPSILON_0_*eps_nl, 'x').reshape((Nbig,1))
 			vector_eps_y = grid_average(EPSILON_0_*eps_nl, 'y').reshape((Nbig,1))
-			nl_region_x = grid_average(nl_region, 'x')
-			nl_region_y = grid_average(nl_region, 'y')
 		else:
 			vector_eps_x = EPSILON_0_*eps_nl.reshape((Nbig,1))
 			vector_eps_y = EPSILON_0_*eps_nl.reshape((Nbig,1))
-			nl_region_x = nl_region
-			nl_region_y = nl_region
 
 		Axx = -Dyb.dot(Dyf)/MU_0_
 		Axy = Dyb.dot(Dxf)/MU_0_
@@ -235,8 +232,12 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
 		Anl = Anl - omega**2*sp.spdiags(eps_xy.reshape((-1,)), 0, 2*Nbig, 2*Nbig, format=matrix_format) 
 		fE = Anl.dot(Exy) - np.vstack((Dyb.dot(b.reshape((Nbig, 1))), -Dxb.dot(b.reshape((Nbig, 1)))))/MU_0_
 
-		dAdex = -(nonlinear_de(Ex)*nl_region_x).reshape((-1,))*omega**2*EPSILON_0_ 
-		dAdey = -(nonlinear_de(Ey)*nl_region_y).reshape((-1,))*omega**2*EPSILON_0_ 
+		if averaging:
+			dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_ 
+			dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_ 
+		else:
+			dAdex = -(nonlinear_de(Ex)*nl_region_x).reshape((-1,))*omega**2*EPSILON_0_ 
+			dAdey = -(nonlinear_de(Ey)*nl_region_y).reshape((-1,))*omega**2*EPSILON_0_ 
 
 		Jac11xx = sp.spdiags(dAdex*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 		Jac11xy = sp.spdiags(dAdex*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
