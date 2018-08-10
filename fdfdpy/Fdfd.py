@@ -66,7 +66,7 @@ class Fdfd:
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
 
 
-	def solve_fields(self, timing=False, averaging=False, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
+	def solve_fields(self, timing=False, averaging=True, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# performs direct solve for A given source
 
 		EPSILON_0_ = EPSILON_0*self.L0
@@ -120,7 +120,7 @@ class Fdfd:
 			raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
 
-	def solve_fields_nl(self, nonlinear_fn, nl_region, dnl_de=None, timing=False, averaging=False,
+	def solve_fields_nl(self, nonlinear_fn, nl_region, dnl_de=None, timing=False, averaging=True,
 						Estart=None, solver_nl='born', conv_threshold=1e-10, max_num_iter=50,
 						solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# solves for the nonlinear fields of the simulation.

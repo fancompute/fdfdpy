@@ -40,7 +40,7 @@ def is_equal(matrix1, matrix2):
 
 
 def construct_A(omega, xrange, yrange, eps_r, NPML, pol, L0,
-				averaging=False,
+				averaging=True,
 				timing=False,
 				matrix_format=DEFAULT_MATRIX_FORMAT):
 	# makes the A matrix
