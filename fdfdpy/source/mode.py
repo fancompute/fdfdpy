@@ -45,5 +45,8 @@ class mode:
 		est_beta = simulation.omega*np.sqrt(MU_0_*EPSILON_0_)*self.neff
 		(vals, vecs) = solver_eigs(A, 1, guess_value=np.square(est_beta))
 
-		simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.real(vecs.reshape((-1,)))
+		if self.direction_normal == 'x':
+			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.real(vecs.reshape((1,-1)))
+		else:
+			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.real(vecs.reshape((-1,1)))			
 	    
