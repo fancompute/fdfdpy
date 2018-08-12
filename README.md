@@ -86,8 +86,10 @@ To load the MKL solver:
 ### To Do
 
 #### Whenever
-- [ ] Modal source.
+- [x] Modal source.
 - [x] More dope plotting methods.
+- [ ] xrange, yrange labels on plots.
+- [ ] set modal source amplitude (and normalization)
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
