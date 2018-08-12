@@ -156,6 +156,11 @@ class Fdfd:
 			# reset the permittivity to the original value
 			self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
 			# return final nonlinear fields and an array of the norm convergences
+
+			self.fields['Hx'] = Hx
+			self.fields['Hy'] = Hy
+			self.fields['Ez'] = Ez
+					
 			return (Hx, Hy, Ez, conv_array)
 
 		elif self.pol == 'Hz':
@@ -179,6 +184,11 @@ class Fdfd:
 			# reset the permittivity to the original value
 			self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
 			# return final nonlinear fields and an array of the norm convergences
+
+			self.fields['Ex'] = Ex
+			self.fields['Ey'] = Ey
+			self.fields['Hz'] = Hz			
+			
 			return (Ex, Ey, Hz, conv_array)
 
 		else:

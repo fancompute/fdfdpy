@@ -46,7 +46,7 @@ class mode:
 		(vals, vecs) = solver_eigs(A, 1, guess_value=np.square(est_beta))
 
 		if self.direction_normal == 'x':
-			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.real(vecs.reshape((1,-1)))
+			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(vecs.reshape((1,-1)))
 		else:
-			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.real(vecs.reshape((-1,1)))			
+			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(vecs.reshape((-1,1)))			
 	    
