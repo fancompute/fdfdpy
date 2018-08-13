@@ -5,17 +5,23 @@ from fdfdpy.constants import *
 from fdfdpy.linalg import *
 
 class mode:
-	def __init__(self, neff, direction_normal, center, width):
+	def __init__(self, neff, direction_normal, center, width, order=1):
 		self.neff = neff
 		self.direction_normal = direction_normal
 		self.center = center
 		self.width = width
+		self.order = order
+
 
 	def setup_src(self, simulation, matrix_format=DEFAULT_MATRIX_FORMAT):
+		self.insert_mode(simulation, simulation.src, matrix_format=matrix_format)
+
+
+	def insert_mode(self, simulation, destination, matrix_format=DEFAULT_MATRIX_FORMAT):
 		EPSILON_0_ = EPSILON_0*simulation.L0
 		MU_0_ = MU_0*simulation.L0
 
-		# first extract the slice of the permittivity 
+		# first extract the slice of the permittivity
 		if self.direction_normal == "x":
 			inds_x = [self.center[0], self.center[0]+1]
 			inds_y = [int(self.center[1]-self.width/2), int(self.center[1]+self.width/2)]
@@ -43,10 +49,17 @@ class mode:
 			A = np.square(simulation.omega)*MU_0_*T_eps + T_eps.dot(Dxf).dot(T_epsxinv).dot(Dxb)
 
 		est_beta = simulation.omega*np.sqrt(MU_0_*EPSILON_0_)*self.neff
-		(vals, vecs) = solver_eigs(A, 1, guess_value=np.square(est_beta))
+		(vals, vecs) = solver_eigs(A, self.order, guess_value=np.square(est_beta))
+
+		if self.order == 1:
+			src = vecs
+		else:
+			print(vecs.shape)
+			src = vecs[:,self.order-1]
 
 		if self.direction_normal == 'x':
-			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(vecs.reshape((1,-1)))
+			src = src.reshape((1,-1))
+			destination[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(src)*np.sign(np.real(src))
 		else:
-			simulation.src[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(vecs.reshape((-1,1)))			
-	    
+			src = src.reshape((-1,1))
+			destination[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(src)*np.sign(np.real(src))

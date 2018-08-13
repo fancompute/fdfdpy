@@ -50,10 +50,10 @@ class Fdfd:
 			modei.setup_src(self)
 
 
-	def add_mode(self, neff, direction_normal, center, width):
+	def add_mode(self, neff, direction_normal, center, width, order=1):
 		# adds a mode definition to the simulation
 
-		self.modes.append( mode(neff, direction_normal, center, width) )
+		self.modes.append( mode(neff, direction_normal, center, width, order=order) )
 
 
 	def reset_eps(self, new_eps):
@@ -160,7 +160,7 @@ class Fdfd:
 			self.fields['Hx'] = Hx
 			self.fields['Hy'] = Hy
 			self.fields['Ez'] = Ez
-					
+
 			return (Hx, Hy, Ez, conv_array)
 
 		elif self.pol == 'Hz':
@@ -187,8 +187,8 @@ class Fdfd:
 
 			self.fields['Ex'] = Ex
 			self.fields['Ey'] = Ey
-			self.fields['Hz'] = Hz			
-			
+			self.fields['Hz'] = Hz
+
 			return (Ex, Ey, Hz, conv_array)
 
 		else:
