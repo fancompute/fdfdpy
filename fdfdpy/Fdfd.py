@@ -6,7 +6,7 @@ from fdfdpy.plot import plt_base, plt_base_eps
 from fdfdpy.nonlinear_solvers import born_solve, newton_solve
 from fdfdpy.source.mode import mode
 
-from numpy import ones, zeros, abs, real
+from numpy import ones, zeros, abs, real, conj, sum
 from scipy.sparse import spdiags
 from copy import deepcopy
 
@@ -205,6 +205,43 @@ class Fdfd:
 		assert self.pol in ['Ez','Hz'], "pol must be one of 'Ez' or 'Hz'"
 
 		# to do, check for correct types as well.
+
+	def flux_probe(self, direction_normal, center, width):
+		# computes the total flux across the plane (line in 2D) defined by direction_normal, center, width
+
+		# first extract the slice of the permittivity
+		if direction_normal == "x":
+			inds_x = [center[0], center[0]+1]
+			inds_y = [int(center[1]-width/2), int(center[1]+width/2)]
+		elif direction_normal == "y":
+			inds_x = [int(center[0]-width/2), int(center[0]+width/2)]
+			inds_y = [center[1], center[1]+1]
+		else:
+			raise ValueError("The value of direction_normal is neither x nor y!")
+
+		if self.pol == 'Ez':
+			Ez_x = grid_average(self.fields['Ez'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1,:-1]
+			Ez_y = grid_average(self.fields['Ez'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1,:-1]
+			# NOTE: Last part drops the extra rows/cols used for grid_average
+
+			if direction_normal == "x":
+				Sx = -1/2*real(Ez_x*conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+				return self.dl*sum(Sx)
+			elif direction_normal == "y":
+				Sy =  1/2*real(Ez_y*conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+				return self.dl*sum(Sy)
+
+		elif self.pol == 'Hz':
+			Hz_x = grid_average(self.fields['Hz'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1,:-1]
+			Hz_y = grid_average(self.fields['Hz'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1,:-1]
+			# NOTE: Last part drops the extra rows/cols used for grid_average
+
+			if direction_normal == "x":
+				Sx =  1/2*real(self.fields['Ey'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*conj(Hz_x))
+				return self.dl*sum(Sx)
+			elif direction_normal == "y":
+				Sy = -1/2*real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*conj(Hz_y))
+				return self.dl*sum(Sy)
 
 
 	def plt_abs(self, cbar=True, outline=True, ax=None):
