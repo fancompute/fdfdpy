@@ -1,11 +1,11 @@
-from numpy import zeros, conj, vstack, abs
+from numpy import zeros, conj, hstack, vstack
 from numpy.linalg import norm
 from scipy.sparse import spdiags
 from scipy.sparse import hstack as sp_hstack
 from scipy.sparse import vstack as sp_vstack
 from scipy.sparse.linalg import norm as sp_norm
 
-from fdfdpy.linalg import grid_average, solver_complex2real
+from fdfdpy.linalg import grid_average, solver_direct, solver_complex2real
 from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.constants import DEFAULT_MATRIX_FORMAT, DEFAULT_SOLVER
 from fdfdpy.constants import EPSILON_0, MU_0
@@ -108,7 +108,6 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 
 		# Solve iteratively
 		for istep in range(max_num_iter):
-
 			Eprev = Ez
 
 			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
@@ -118,6 +117,10 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 			# Namely, J*(x_n - x_{n-1}) = -f(x_{n-1}), where J = df/dx(x_{n-1})
 
 			Ediff = solver_complex2real(Jac11, Jac12, fx, solver=solver, timing=False)
+			# Abig = sp_vstack((sp_hstack((Jac11, Jac12)), \
+			#	sp_hstack((conj(Jac12), conj(Jac11)))))
+			# Ediff = solver_direct(Abig, vstack((fx, conj(fx))))
+
 			Ez = Eprev - Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
 
 			# get convergence and break
@@ -159,6 +162,9 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 			# Namely, J*(x_n - x_{n-1}) = -f(x_{n-1}), where J = df/dx(x_{n-1})
 
 			Ediff = solver_complex2real(Jac11, Jac12, fx, solver=solver, timing=False)
+			# Abig = sp_vstack((sp_hstack((Jac11, Jac12)), \
+		    #	sp_hstack((conj(Jac12), conj(Jac11)))))
+			# Ediff = solver_direct(Abig, vstack((fx, conj(fx))))
 
 			Ex = Exprev - Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
 			Ey = Eyprev - Ediff[range(Nbig, 2*Nbig)].reshape(simulation.Nx, simulation.Ny)
@@ -183,7 +189,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 
 def LM_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 				Estart=None, conv_threshold=1e-10, max_num_iter=50, averaging=True,
-				solver=DEFAULT_SOLVER, jac_solver='c2r', matrix_format=DEFAULT_MATRIX_FORMAT, lambda0=1e0):
+				solver=DEFAULT_SOLVER, jac_solver='c2r', matrix_format=DEFAULT_MATRIX_FORMAT, lambda0=1e-2):
 	# solves for the nonlinear fields using Newton's method
 
 	eps_lin = simulation.eps_r
@@ -211,16 +217,12 @@ def LM_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 											Ez=Eprev, matrix_format=matrix_format)
 
 			# Construct the matrix blocks of J.T.dot(J)
-			JTJ11 = Jac11.transpose().dot(Jac11) + Jac12.transpose().conjugate().dot(Jac12.conjugate())
+			JTJ11 = Jac11.transpose().conjugate().dot(Jac11) + Jac12.transpose().dot(Jac12.conjugate())
 			JTJ11 = JTJ11 + spdiags(lambda0*JTJ11.diagonal(), 0, Nbig, Nbig, format=matrix_format)
-			JTJ12 =	Jac11.transpose().dot(Jac12) + Jac12.transpose().conjugate().dot(Jac11.conjugate())
-
-#			print(abs(JTJ11).max())
-#			print(abs(JTJ11.diagonal()).max())
-#			print(abs(JTJ12).max())
+			JTJ12 =	Jac11.transpose().conjugate().dot(Jac12) + Jac12.transpose().dot(Jac11.conjugate())
 						
 			# Vector J.T.dot(fx)
-			JTf = Jac11.transpose().dot(fx) + Jac12.transpose().conjugate().dot(conj(fx))
+			JTf = Jac11.transpose().conjugate().dot(fx) + Jac12.transpose().dot(conj(fx))
 			Ediff = solver_complex2real(JTJ11, JTJ12, -JTf)
 			Etest = Eprev + Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
 
@@ -228,13 +230,18 @@ def LM_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 											Ez=Etest, matrix_format=matrix_format, compute_jac=False)
 
 			if norm(ftest) < norm(fx):
-				lambda0 = lambda0/100
+				lambda0 = lambda0/10
 				Ez = Etest
 			else:
-				lambda0 = lambda0*100
+				lambda0 = lambda0*10
 
-			print("ftest = ", norm(ftest))
-			print("fx = ", norm(fx))
+			# Ediff = -JTf.reshape((-1,))/(JTJ11.diagonal())
+			# Ez = Eprev + lambda0*Ediff.reshape(simulation.Nx, simulation.Ny)
+			# print(max(Ediff))
+
+			# print("ftest = ", norm(ftest))
+			# print("fx = ", norm(fx)/norm(b)/simulation.omega)
+			# print(lambda0)
 
 			convergence = norm(fx)/(norm(b)*simulation.omega)
 			conv_array[istep] = convergence
