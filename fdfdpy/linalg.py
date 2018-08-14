@@ -163,6 +163,7 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
 
 	b_re = real(b).astype(float64)
 	b_im = imag(b).astype(float64)
+
 	Areal = sp_vstack((sp_hstack((real(A11) + real(A12), -imag(A11) + imag(A12))), \
 		    sp_hstack((imag(A11) + imag(A12), real(A11) - real(A12)))))
 

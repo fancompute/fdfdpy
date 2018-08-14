@@ -3,7 +3,7 @@ from fdfdpy.constants import EPSILON_0, MU_0
 from fdfdpy.linalg import construct_A, solver_direct, grid_average
 from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.plot import plt_base, plt_base_eps
-from fdfdpy.nonlinear_solvers import born_solve, newton_solve
+from fdfdpy.nonlinear_solvers import born_solve, newton_solve, LM_solve
 from fdfdpy.source.mode import mode
 
 from numpy import ones, zeros, abs, real, conj, sum
@@ -149,9 +149,17 @@ class Fdfd:
 
 				(Hx, Hy, Ez, conv_array) = newton_solve(self, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
 
+			elif solver_nl == 'LM':
+
+				# LM needs the derivative of the nonlinearity.
+				if dnl_de is None:
+					raise ValueError("'dnl_de' argument must be set to run LM solve")
+
+				(Hx, Hy, Ez, conv_array) = LM_solve(self, nonlinear_fn, nl_region, dnl_de, Estart, conv_threshold, max_num_iter, averaging=averaging)
+
 			# incorrect solver_nl argument
 			else:
-				raise AssertionError("solver must be one of {'born', 'newton'}")
+				raise AssertionError("solver must be one of {'born', 'newton', 'LM'}")
 
 			# reset the permittivity to the original value
 			self.eps_r = eps_orig    # (note, not self.reset_eps or else the fields get destroyed)
