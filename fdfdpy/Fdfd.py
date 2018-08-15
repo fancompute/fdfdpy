@@ -50,10 +50,10 @@ class Fdfd:
 			modei.setup_src(self)
 
 
-	def add_mode(self, neff, direction_normal, center, width, order=1):
+	def add_mode(self, neff, direction_normal, center, width, scale=1, order=1):
 		# adds a mode definition to the simulation
 
-		self.modes.append( mode(neff, direction_normal, center, width, order=order) )
+		self.modes.append( mode(neff, direction_normal, center, width, scale=scale, order=order) )
 
 
 	def reset_eps(self, new_eps):
