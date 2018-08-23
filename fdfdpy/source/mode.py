@@ -97,7 +97,6 @@ class mode:
 		if self.order == 1:
 			src = vecs
 		else:
-			print(vecs.shape)
 			src = vecs[:,self.order-1]
 
 		src *= self.scale
