@@ -19,7 +19,6 @@ class Fdfd:
 		self.L0 = L0
 		self.omega = float(omega)
 		self.dl = float(dl)
-		self.eps_r = eps_r
 		self.NPML = [int(n) for n in NPML]
 		self.pol = pol
 
@@ -34,39 +33,32 @@ class Fdfd:
 		self.yrange = [0, float(Ny*self.dl)]
 
 		# construct the system matrix
-		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, eps_r, self.NPML, self.pol, self.L0,
-								matrix_format=DEFAULT_MATRIX_FORMAT,
-								timing=False)
-		self.A = A
-		self.derivs = derivs
-		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
-		self.modes = [];
-
+		self.eps_r = eps_r
+		self.modes = []
 
 	def setup_modes(self):
 		# calculates
-
 		for modei in self.modes:
 			modei.setup_src(self)
-
 
 	def add_mode(self, neff, direction_normal, center, width, scale=1, order=1):
 		# adds a mode definition to the simulation
 
 		self.modes.append( mode(neff, direction_normal, center, width, scale=scale, order=order) )
 
+	@property
+	def eps_r(self):
+		return self.__eps_r
 
-	def reset_eps(self, new_eps):
-		# sets a new permittivity with the same other parameters and reconstructs a new A
-
-		self.eps_r = new_eps
-		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
+	@eps_r.setter
+	def eps_r(self, eps_r):
+		self.__eps_r = eps_r
+		(A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.__eps_r, self.NPML, self.pol, self.L0,
 								matrix_format=DEFAULT_MATRIX_FORMAT,
 								timing=False)
-		self.A = A
+		self.A = A		
 		self.derivs = derivs
 		self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
-
 
 	def solve_fields(self, timing=False, averaging=True, solver=DEFAULT_SOLVER, matrix_format=DEFAULT_MATRIX_FORMAT):
 		# performs direct solve for A given source
