@@ -8,13 +8,30 @@ This is a pure Python implementation of the finite difference frequency domain (
 
     python setup.py install
 
+## Examples
+
+See the ipython notebooks in `notebooks`.
+
+## Unit Tests
+
+Some basic tests are included in `tests/`
+
+To run an example test, `tests/test_nonlinear_solvers.py`, either call
+
+	python -m unittest tests/test_nonlinear_solvers.py
+
+or
+
+	python tests/test_nonlinear_solvers.py
+
 ## Structure
 
 ### Initialization
 
-The `Fdfd` class is initialized as
+The `Simulation` class is initialized as
 
-	simulation = Fdfd(omega, eps_r, dl, NPML, pol, L0)
+	from fdfdpy import Simulation
+	simulation = Simulation(omega, eps_r, dl, NPML, pol, L0)
 
 - `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
@@ -97,4 +114,4 @@ To load the MKL solver:
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
-- [ ] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
+- [x] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
