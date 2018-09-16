@@ -1,14 +1,13 @@
 import numpy as np
 import scipy.sparse as sp
+from copy import deepcopy
 
 from fdfdpy.constants import *
 from fdfdpy.linalg import *
 
-from copy import deepcopy
-from numpy import ones
-
 
 class mode:
+
     def __init__(self, neff, direction_normal, center, width, scale, order=1):
         self.neff = neff
         self.direction_normal = direction_normal
@@ -17,37 +16,35 @@ class mode:
         self.order = order
         self.scale = scale
 
-
     def setup_src(self, simulation, matrix_format=DEFAULT_MATRIX_FORMAT):
         # compute the input power here using an only waveguide simulation
         self.compute_normalization(simulation, matrix_format=matrix_format)
 
-        # insert the mode into the waveguide  
+        # insert the mode into the waveguide
         self.insert_mode(simulation, simulation.src, matrix_format=matrix_format)
-
 
     def compute_normalization(self, simulation, matrix_format=DEFAULT_MATRIX_FORMAT):
         # creates a single waveguide simulation, solves the source, computes the power
 
         # get some information from the permittivity
         original_eps = simulation.eps_r
-        (Nx,Ny) = original_eps.shape
+        (Nx, Ny) = original_eps.shape
         eps_max = np.max(original_eps)
-        norm_eps = ones((Nx,Ny))
+        norm_eps = np.ones((Nx, Ny))
 
         # make a new simulation and get a new probe center
-        simulation_norm = deepcopy(simulation)      
+        simulation_norm = deepcopy(simulation)
         new_center = list(self.center)
 
-        # compute where the source and waveguide should be 
+        # compute where the source and waveguide should be
         if self.direction_normal == "x":
-            inds_y = original_eps[self.center[0],:] > 1
-            norm_eps[:,inds_y] = eps_max
+            inds_y = original_eps[self.center[0], :] > 1
+            norm_eps[:, inds_y] = eps_max
             new_center[0] = Nx - new_center[0]
         elif self.direction_normal == "y":
-            inds_x = original_eps[:,self.center[1]] > 1
-            norm_eps[inds_x,:] = eps_max
-            new_center[1] = Ny - new_center[1]              
+            inds_x = original_eps[:, self.center[1]] > 1
+            norm_eps[inds_x, :] = eps_max
+            new_center[1] = Ny - new_center[1]
         else:
             raise ValueError("The value of direction_normal is not x or y!")
 
@@ -56,10 +53,9 @@ class mode:
         self.insert_mode(simulation_norm, simulation_norm.src, matrix_format=matrix_format)
         simulation_norm.solve_fields()
         W_in = simulation_norm.flux_probe(self.direction_normal, new_center, self.width)
-        
+
         # save this value in the original simulation
         simulation.W_in = W_in
-
 
     def insert_mode(self, simulation, destination, matrix_format=DEFAULT_MATRIX_FORMAT):
         EPSILON_0_ = EPSILON_0*simulation.L0
@@ -75,14 +71,14 @@ class mode:
         else:
             raise ValueError("The value of direction_normal is not x or y!")
 
-        eps_r = simulation.eps_r[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ]
+        eps_r = simulation.eps_r[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]
         N = eps_r.size
 
         Dxb = createDws('x', 'b', [simulation.dl], [N], matrix_format=matrix_format)
         Dxf = createDws('x', 'f', [simulation.dl], [N], matrix_format=matrix_format)
 
         vector_eps = EPSILON_0_*eps_r.reshape((-1,))
-        vector_eps_x = EPSILON_0_*grid_average(eps_r,'x').reshape((-1,))
+        vector_eps_x = EPSILON_0_*grid_average(eps_r, 'x').reshape((-1,))
         T_eps = sp.spdiags(vector_eps, 0, N, N, format=matrix_format)
         T_epsxinv = sp.spdiags(vector_eps_x**(-1), 0, N, N, format=matrix_format)
 
@@ -98,13 +94,13 @@ class mode:
         if self.order == 1:
             src = vecs
         else:
-            src = vecs[:,self.order-1]
+            src = vecs[:, self.order-1]
 
         src *= self.scale
 
         if self.direction_normal == 'x':
-            src = src.reshape((1,-1))
-            destination[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(src)*np.sign(np.real(src))
+            src = src.reshape((1, -1))
+            destination[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]] = np.abs(src)*np.sign(np.real(src))
         else:
-            src = src.reshape((-1,1))
-            destination[ inds_x[0]:inds_x[1], inds_y[0]:inds_y[1] ] = np.abs(src)*np.sign(np.real(src))
+            src = src.reshape((-1, 1))
+            destination[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]] = np.abs(src)*np.sign(np.real(src))
