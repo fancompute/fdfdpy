@@ -35,7 +35,7 @@ def born_solve(simulation, nonlinear_fn, nl_region,
             eps_nl = eps_lin + nonlinear_fn(Eprev)*nl_region
 
             # get new fields
-            simulation.reset_eps(eps_nl)
+            simulation.eps_r = eps_nl
             (Hx, Hy, Ez) = simulation.solve_fields()
 
             # get convergence and break
@@ -68,7 +68,7 @@ def born_solve(simulation, nonlinear_fn, nl_region,
             eps_nl = eps_lin + (nonlinear_fn(Exprev) + nonlinear_fn(Eyprev))*nl_region
 
             # get new fields
-            simulation.reset_eps(eps_nl)
+            simulation.eps_r = eps_nl
             (Ex, Ey, Hz) = simulation.solve_fields(averaging=averaging)
 
             # get convergence and break
@@ -136,7 +136,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 
         # Solve the fdfd problem with the final eps_nl
         eps_nl = eps_lin + (nonlinear_fn(Ez)*nl_region)
-        simulation.reset_eps(eps_nl)
+        simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields()
 
         if convergence > conv_threshold:
@@ -187,7 +187,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 
         # Solve the fdfd problem with the final eps_nl
         eps_nl = eps_lin + (nonlinear_fn(Exprev) + nonlinear_fn(Eyprev))*nl_region
-        simulation.reset_eps(eps_nl)
+        simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields(averaging=averaging)
 
         if convergence > conv_threshold:
@@ -264,7 +264,7 @@ def LM_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
 
         # Solve the fdfd problem with the final eps_nl
         eps_nl = eps_lin + (nonlinear_fn(Ez)*nl_region)
-        simulation.reset_eps(eps_nl)
+        simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields()
 
         if convergence > conv_threshold:
@@ -290,7 +290,7 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
     eps_nl *= nl_region
 
     # Reset simulation for matrix A
-    simulation.reset_eps(eps_nl)
+    simulation.eps_r = eps_nl
 
     if simulation.pol == 'Ez':
 

@@ -51,7 +51,7 @@ class mode:
 			raise ValueError("The value of direction_normal is not x or y!")
 
 		# reset the permittivity to be a straight waveguide, solve fields, compute power
-		simulation_norm.reset_eps(norm_eps)		
+		simulation_norm.eps_r = norm_eps
 		self.insert_mode(simulation_norm, simulation_norm.src, matrix_format=matrix_format)
 		simulation_norm.solve_fields()
 		W_in = simulation_norm.flux_probe(self.direction_normal, new_center, self.width)

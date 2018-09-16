@@ -4,7 +4,7 @@ import numpy as np
 import scipy.sparse as sp
 import scipy.sparse.linalg as spl
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyMKL')))
+# sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyMKL')))
 
 from fdfdpy.pml import S_create
 from fdfdpy.derivatives import createDws
@@ -166,15 +166,15 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
     b_re = np.real(b).astype(np.float64)
     b_im = np.imag(b).astype(np.float64)
 
-    Anp.real = sp.sp_vstack((sp.sp_hstack((np.real(A11) + np.real(A12), -np.imag(A11) + np.imag(A12))), \
-               sp.sp_hstack((np.imag(A11) + np.imag(A12), np.real(A11) - np.real(A12)))))
+    A_real = sp.vstack((sp.hstack((np.real(A11) + np.real(A12), -np.imag(A11) + np.imag(A12))), \
+               sp.hstack((np.imag(A11) + np.imag(A12), np.real(A11) - np.real(A12)))))
 
     if timing:
         t = time()
 
     if solver.lower() == 'pardiso':
         # Matrix is np.real unsymmetric
-        pSolve = pardisoSolver(Anp.real, mtype=11)
+        pSolve = pardisoSolver(A_real, mtype=11)
         pSolve.factor()
         x = pSolve.solve(np.hstack((b_re, b_im)))
         pSolve.clear()
