@@ -319,7 +319,7 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
         Axy = Dyb.dot(Dxf)/MU_0_
         Ayx = Dxb.dot(Dyf)/MU_0_
         Ayy = -Dxb.dot(Dxf)/MU_0_
-        Anl = sp.sp_vstack((sp.sp_hstack((Axx, Axy)), (sp.sp_hstack((Ayx, Ayy)))))
+        Anl = sp.vstack((sp.hstack((Axx, Axy)), (sp.hstack((Ayx, Ayy)))))
 
         Exy = np.vstack((Ex.reshape((Nbig, 1)), Ey.reshape((Nbig, 1))))
         eps_xy = np.vstack((vector_eps_x, vector_eps_y))
@@ -345,8 +345,8 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
             Jac12yx = sp.spdiags(np.conj(dAdey)*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
             Jac12yy = sp.spdiags(np.conj(dAdey)*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 
-            Jac11 = Anl + sp.sp_vstack((sp.sp_hstack((Jac11xx, Jac11xy)), sp.sp_hstack((Jac11yx, Jac11yy))))
-            Jac12 = sp.sp_vstack((sp.sp_hstack((Jac12xx, Jac12xy)), sp.sp_hstack((Jac12yx, Jac12yy))))
+            Jac11 = Anl + sp.vstack((sp.hstack((Jac11xx, Jac11xy)), sp.hstack((Jac11yx, Jac11yy))))
+            Jac12 = sp.vstack((sp.hstack((Jac12xx, Jac12xy)), sp.hstack((Jac12yx, Jac12yy))))
 
     if compute_jac:
         return (fE, Jac11, Jac12)
