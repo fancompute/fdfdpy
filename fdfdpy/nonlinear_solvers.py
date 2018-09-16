@@ -286,8 +286,7 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
     Nbig = simulation.Nx*simulation.Ny
 
     # Set nonlinear permittivity
-    eps_nl = eps_lin + sum(nonlinear_fn(e) for e in (Ex, Ey, Ez) if e is not None)
-    eps_nl *= nl_region
+    eps_nl = eps_lin + sum(nonlinear_fn(e) for e in (Ex, Ey, Ez) if e is not None)*nl_region
 
     # Reset simulation for matrix A
     simulation.eps_r = eps_nl

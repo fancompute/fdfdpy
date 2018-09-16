@@ -55,14 +55,6 @@ for srcval in srcval_vec:
                                Estart=None, solver_nl='born')
     E_born = simulation.fields["Ez"]
 
-    plt.imshow(np.abs(E_newton))
-    plt.colorbar()
-    plt.show()
-
-    plt.imshow(np.abs(E_born-E_newton))
-    plt.colorbar()
-    plt.show()
-
     # More solvers (if any) should be added here with corresponding calls to assert_allclose() below
 
     assert_allclose(E_newton, E_born, rtol=1e-2)
