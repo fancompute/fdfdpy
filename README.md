@@ -79,11 +79,11 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 
 ### Setting a new permittivity
 
-If you want to change the permittivity distribution, you may run
+If you want to change the permittivity distribution, reassigning `eps_r`
 
-	simulation.reset_eps(new_eps)
+	simulation.eps_r = eps_new
 
-And this will reconstruct the system matrix and store it in `FDFD`. Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources.
+will automatically solve for a new system matrix with the new permittivity distribution.  Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources. <- I'll make this happen automatically later -T
 
 ### Plotting
 
