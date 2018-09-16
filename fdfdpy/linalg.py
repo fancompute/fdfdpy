@@ -1,8 +1,6 @@
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), 'pyMKL')))
 
-from fdfdpy.constants import DEFAULT_MATRIX_FORMAT, DEFAULT_SOLVER
-from fdfdpy.constants import EPSILON_0, MU_0
 from fdfdpy.pml import S_create
 from fdfdpy.derivatives import createDws
 
@@ -38,7 +36,7 @@ def dL(N, xrange, yrange=None):
 def is_equal(matrix1, matrix2):
 	# checks if two sparse matrices are equal
 
-	return (matrix1!=matrix2).nnz==0
+	return (matrix1 != matrix2).nnz == 0
 
 
 def construct_A(omega, xrange, yrange, eps_r, NPML, pol, L0,

@@ -7,8 +7,6 @@ from scipy.sparse.linalg import norm as sp_norm
 
 from fdfdpy.linalg import grid_average, solver_direct, solver_complex2real
 from fdfdpy.derivatives import unpack_derivs
-from fdfdpy.constants import DEFAULT_MATRIX_FORMAT, DEFAULT_SOLVER
-from fdfdpy.constants import EPSILON_0, MU_0
 
 # Note: for both solvers, the simulation object must have been initialized with the linear permittivity eps_r
 
