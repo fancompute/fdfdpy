@@ -17,5 +17,12 @@ setup(
     author_email='twhughes@stanford.edu',
     url='https://github.com/fancompute/fdfdpy',
     license=license,
-    packages=find_packages(exclude=('tests', 'docs')) + ['fdfdpy/pyMKL']
+    packages=find_packages(exclude=('tests', 'docs')),
+    install_requires=[
+          'pyMKL',
+          'numpy',
+          'scipy',
+          'matplotlib',
+          'progressbar'
+      ],
 )
