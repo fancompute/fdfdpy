@@ -1,15 +1,17 @@
+import numpy as np
+import scipy.sparse as sp
+from copy import deepcopy
+
 from fdfdpy.linalg import construct_A, solver_direct, grid_average
 from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.plot import plt_base, plt_base_eps
 from fdfdpy.nonlinear_solvers import born_solve, newton_solve, LM_solve
 from fdfdpy.source.mode import mode
-
-from numpy import ones, zeros, abs, real, conj, sum
-from scipy.sparse import spdiags
-from copy import deepcopy
+from fdfdpy.constants import (DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT,
+                              DEFAULT_SOLVER, EPSILON_0, MU_0)
 
 
-class Fdfd:
+class Simulation:
 
     def __init__(self, omega, eps_r, dl, NPML, pol, L0=DEFAULT_LENGTH_SCALE):
         # initializes Fdfd object
@@ -25,8 +27,8 @@ class Fdfd:
         (Nx, Ny) = eps_r.shape
         self.Nx = Nx
         self.Ny = Ny
-        self.mu_r = ones((self.Nx, self.Ny))
-        self.src = zeros((self.Nx, self.Ny))
+        self.mu_r = np.ones((self.Nx, self.Ny))
+        self.src = np.zeros((self.Nx, self.Ny))
         self.xrange = [0, float(Nx*self.dl)]
         self.yrange = [0, float(Ny*self.dl)]
 
@@ -85,9 +87,9 @@ class Fdfd:
                 vector_eps_x = EPSILON_0_*self.eps_r.reshape((-1,))
                 vector_eps_y = EPSILON_0_*self.eps_r.reshape((-1,))
 
-            T_eps_x_inv = spdiags(1/vector_eps_x, 0, M, M,
+            T_eps_x_inv = sp.spdiags(1/vector_eps_x, 0, M, M,
                                   format=matrix_format)
-            T_eps_y_inv = spdiags(1/vector_eps_y, 0, M, M,
+            T_eps_y_inv = sp.spdiags(1/vector_eps_y, 0, M, M,
                                   format=matrix_format)
 
             ex = -1/1j/self.omega * T_eps_x_inv.dot(Dyb).dot(X)
@@ -259,11 +261,11 @@ class Fdfd:
             # NOTE: Last part drops the extra rows/cols used for grid_average
 
             if direction_normal == "x":
-                Sx = -1/2*real(Ez_x*conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
-                return self.dl*sum(Sx)
+                Sx = -1/2*np.real(Ez_x*np.conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+                return self.dl*np.sum(Sx)
             elif direction_normal == "y":
-                Sy = 1/2*real(Ez_y*conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
-                return self.dl*sum(Sy)
+                Sy = 1/2*np.real(Ez_y*np.conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+                return self.dl*np.sum(Sy)
 
         elif self.pol == 'Hz':
             Hz_x = grid_average(self.fields['Hz'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1, :-1]
@@ -271,20 +273,20 @@ class Fdfd:
             # NOTE: Last part drops the extra rows/cols used for grid_average
 
             if direction_normal == "x":
-                Sx = 1/2*real(self.fields['Ey'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*conj(Hz_x))
-                return self.dl*sum(Sx)
+                Sx = 1/2*np.real(self.fields['Ey'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_x))
+                return self.dl*np.sum(Sx)
             elif direction_normal == "y":
-                Sy = -1/2*real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*conj(Hz_y))
-                return self.dl*sum(Sy)
+                Sy = -1/2*np.real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
+                return self.dl*np.sum(Sy)
 
     def plt_abs(self, cbar=True, outline=True, ax=None):
-        # plot absolute value of primary field (e.g. Ez/Hz)
+        # plot np.absolute value of primary field (e.g. Ez/Hz)
 
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
-        field_val = abs(self.fields[self.pol])
-        outline_val = abs(self.eps_r)
+        field_val = np.abs(self.fields[self.pol])
+        outline_val = np.abs(self.eps_r)
         vmin = 0.0
         vmax = field_val.max()
         cmap = "magma"
@@ -293,15 +295,15 @@ class Fdfd:
                         cbar=cbar, outline=outline, ax=ax)
 
     def plt_re(self, cbar=True, outline=True, ax=None):
-        # plot real part of primary field (e.g. Ez/Hz)
+        # plot np.real part of primary field (e.g. Ez/Hz)
 
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
-        field_val = real(self.fields[self.pol])
-        outline_val = abs(self.eps_r)
-        vmin = -abs(field_val).max()
-        vmax = +abs(field_val).max()
+        field_val = np.real(self.fields[self.pol])
+        outline_val = np.abs(self.eps_r)
+        vmin = -np.abs(field_val).max()
+        vmax = +np.abs(field_val).max()
         cmap = "RdBu"
 
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
@@ -310,10 +312,10 @@ class Fdfd:
     def plt_eps(self, cbar=True, outline=True, ax=None):
         # plot the permittivity distribution
 
-        eps_val = abs(self.eps_r)
-        outline_val = abs(self.eps_r)
+        eps_val = np.abs(self.eps_r)
+        outline_val = np.abs(self.eps_r)
         vmin = 1
-        vmax = abs(self.eps_r).max()
+        vmax = np.abs(self.eps_r).max()
         cmap = "Greys"
 
         return plt_base_eps(eps_val, outline_val, cmap, vmin, vmax, cbar=cbar,
