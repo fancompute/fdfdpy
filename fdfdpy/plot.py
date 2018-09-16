@@ -16,7 +16,7 @@ def plt_base(field_val, outline_val, cmap, vmin, vmax, label,
     h = ax.imshow(field_val, cmap=cmap, vmin=vmin, vmax=vmax, origin='lower')
 
     if cbar:
-        colorbar(h, label=label, ax=ax)
+        plt.colorbar(h, label=label, ax=ax)
 
     if outline:
         # Do black and white so we can see on both magma and RdBu
@@ -42,7 +42,7 @@ def plt_base_eps(field_val, outline_val, cmap, vmin, vmax,
     h = ax.imshow(field_val, cmap=cmap, vmin=vmin, vmax=vmax, origin='lower')
 
     if cbar:
-        colorbar(h, label='relative permittivity', ax=ax)
+        plt.colorbar(h, label='relative permittivity', ax=ax)
 
     if outline:
         # Do black and white so we can see on both magma and RdBu
@@ -60,7 +60,7 @@ def plt_base_ani(field_val, cbar=True, Nframes=40, interval=80):
     field_val = field_val.transpose()
 
     fig, ax = plt.subplots(1, constrained_layout=True)
-    h = ax.imshow(zeros(field_val.shape).transpose(), origin='lower')
+    h = ax.imshow(np.zeros(field_val.shape).transpose(), origin='lower')
 
     ax.set_xticks([])
     ax.set_yticks([])

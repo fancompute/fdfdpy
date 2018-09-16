@@ -5,6 +5,10 @@ from fdfdpy import Simulation
 from numpy import pi, ones, zeros, square, conj, logspace, array, append, unwrap, angle
 from numpy.testing import assert_allclose
 
+import matplotlib.pylab as plt
+
+import numpy as np
+
 n0 = 3.4
 omega = 2*pi*200e12
 dl = 0.01
@@ -51,6 +55,14 @@ for srcval in srcval_vec:
                                Estart=None, solver_nl='born')
     E_born = simulation.fields["Ez"]
 
+    plt.imshow(np.abs(E_newton))
+    plt.colorbar()
+    plt.show()
+
+    plt.imshow(np.abs(E_born-E_newton))
+    plt.colorbar()
+    plt.show()
+
     # More solvers (if any) should be added here with corresponding calls to assert_allclose() below
 
-    assert_allclose(E_newton, E_born, rtol=1e-3)
+    assert_allclose(E_newton, E_born, rtol=1e-2)
