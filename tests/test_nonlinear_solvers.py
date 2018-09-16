@@ -38,13 +38,13 @@ T_vec = array([])
 for srcval in srcval_vec:
     simulation.setup_modes()
     simulation.src *= srcval
-    
+
     # Newton
     simulation.solve_fields_nl(kerr_nonlinearity, nl_region,
                                dnl_de=dkerr_de, timing=False, averaging=True,
                                Estart=None, solver_nl='newton')
     E_newton = simulation.fields["Ez"]
-    
+
     # Born
     simulation.solve_fields_nl(kerr_nonlinearity, nl_region,
                                dnl_de=dkerr_de, timing=False, averaging=True,
@@ -52,5 +52,5 @@ for srcval in srcval_vec:
     E_born = simulation.fields["Ez"]
 
     # More solvers (if any) should be added here with corresponding calls to assert_allclose() below
-    
+
     assert_allclose(E_newton, E_born, rtol=1e-3)
