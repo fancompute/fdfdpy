@@ -4,6 +4,10 @@
 
 This is a pure Python implementation of the finite difference frequency domain (FDFD) method. It makes use of scipy, numpy, matplotlib, and the MKL Pardiso solver. fdfdpy currently supports 2D geometries
 
+## Installation
+
+    python setup.py install
+
 ## Structure
 
 ### Initialization
