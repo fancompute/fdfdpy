@@ -72,7 +72,7 @@ class Simulation:
                                 timing=False)
         self.A = A
         self.derivs = derivs
-        self.fields = {f : None for f in ['Ex','Ey','Ez','Hx','Hy','Hz']}
+        self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
 
     def solve_fields(self, timing=False, averaging=True, solver=DEFAULT_SOLVER,
                      matrix_format=DEFAULT_MATRIX_FORMAT):
@@ -190,8 +190,8 @@ class Simulation:
                                      "{'born', 'newton', 'LM'}")
 
             # reset the permittivity to the original value
-            # (note, not self.reset_eps or else the fields get destroyed)
-            self.eps_r = eps_orig
+            self.reset_eps(eps_orig)
+
             # return final nonlinear fields and an array of the convergences
 
             self.fields['Hx'] = Hx
