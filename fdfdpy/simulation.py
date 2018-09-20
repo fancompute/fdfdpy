@@ -103,8 +103,8 @@ class Simulation:
             T_eps_y_inv = sp.spdiags(1/vector_eps_y, 0, M, M,
                                   format=matrix_format)
 
-            ex = -1/1j/self.omega * T_eps_x_inv.dot(Dyb).dot(X)
-            ey = 1/1j/self.omega * T_eps_x_inv.dot(Dxb).dot(X)
+            ex = 1/1j/self.omega * T_eps_y_inv.dot(Dyb).dot(X)
+            ey = -1/1j/self.omega * T_eps_x_inv.dot(Dxb).dot(X)
 
             Ex = ex.reshape((Nx, Ny))
             Ey = ey.reshape((Nx, Ny))
