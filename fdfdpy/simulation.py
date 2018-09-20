@@ -230,7 +230,8 @@ class Simulation:
 
             # reset the permittivity to the original value
             # (note, not self.reset_eps or else the fields get destroyed)
-            self.eps_r = eps_orig
+            self.reset_eps(eps_orig)
+
             # return final nonlinear fields and an array of the convergences
 
             self.fields['Ex'] = Ex
