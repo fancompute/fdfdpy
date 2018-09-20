@@ -285,7 +285,7 @@ class Fdfd:
 
 		eps_val = abs(self.eps_r)
 		outline_val = abs(self.eps_r)
-		vmin = 1
+		vmin = abs(self.eps_r).min()
 		vmax = abs(self.eps_r).max()
 		cmap = "Greys"
 
