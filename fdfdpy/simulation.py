@@ -291,14 +291,19 @@ class Simulation:
                 Sy = -1/2*np.real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
                 return self.dl*np.sum(Sy)
 
-    def plt_abs(self, cbar=True, outline=True, ax=None, vmax=None):
+    def plt_abs(self, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
         # plot np.absolute value of primary field (e.g. Ez/Hz)
 
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
+        eps_r = self.eps_r
+        eps_r = np.hstack(tiled_y*[eps_r])
+
         field_val = np.abs(self.fields[self.pol])
-        outline_val = np.abs(self.eps_r)
+        field_val = np.hstack(tiled_y*[field_val])
+
+        outline_val = np.abs(eps_r)
         vmin = 0.0
 
         if vmax is None:
@@ -309,14 +314,19 @@ class Simulation:
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
                         cbar=cbar, outline=outline, ax=ax)
 
-    def plt_re(self, cbar=True, outline=True, ax=None):
+    def plt_re(self, cbar=True, outline=True, ax=None, tiled_y=1):
         # plot np.real part of primary field (e.g. Ez/Hz)
+
+        eps_r = self.eps_r
+        eps_r = np.hstack(tiled_y*[eps_r])
 
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
         field_val = np.real(self.fields[self.pol])
-        outline_val = np.abs(self.eps_r)
+        field_val = np.hstack(tiled_y*[field_val])
+
+        outline_val = np.abs(eps_r)
         vmin = -np.abs(field_val).max()
         vmax = +np.abs(field_val).max()
         cmap = "RdBu"
@@ -324,13 +334,16 @@ class Simulation:
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
                         cbar=cbar, outline=outline, ax=ax)
 
-    def plt_eps(self, cbar=True, outline=True, ax=None):
+    def plt_eps(self, cbar=True, outline=True, ax=None, tiled_y=1):
         # plot the permittivity distribution
 
-        eps_val = np.abs(self.eps_r)
-        outline_val = np.abs(self.eps_r)
+        eps_r = self.eps_r
+        eps_r = np.hstack(tiled_y*[eps_r])
+
+        eps_val = np.abs(eps_r)
+        outline_val = np.abs(eps_r)
         vmin = 1
-        vmax = np.abs(self.eps_r).max()
+        vmax = np.abs(eps_r).max()
         cmap = "Greys"
 
         return plt_base_eps(eps_val, outline_val, cmap, vmin, vmax, cbar=cbar,
