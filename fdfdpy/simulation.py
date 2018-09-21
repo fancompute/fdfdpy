@@ -291,7 +291,7 @@ class Simulation:
                 Sy = -1/2*np.real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
                 return self.dl*np.sum(Sy)
 
-    def plt_abs(self, cbar=True, outline=True, ax=None):
+    def plt_abs(self, cbar=True, outline=True, ax=None, vmax=None):
         # plot np.absolute value of primary field (e.g. Ez/Hz)
 
         if self.fields[self.pol] is None:
@@ -300,7 +300,10 @@ class Simulation:
         field_val = np.abs(self.fields[self.pol])
         outline_val = np.abs(self.eps_r)
         vmin = 0.0
-        vmax = field_val.max()
+
+        if vmax is None:
+            vmax = field_val.max()
+
         cmap = "magma"
 
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
