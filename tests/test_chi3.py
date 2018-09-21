@@ -1,6 +1,6 @@
 import os, sys
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-from fdfdpy.Fdfd import Fdfd
+from fdfdpy import Simulation
 from numpy import pi, ones, zeros, square, conj, logspace, array, append, unwrap, angle
 from numpy.testing import assert_allclose
 
@@ -25,7 +25,7 @@ eps_r = ones((Nx, Ny))
 eps_r[:,int(Ny/2-width_voxels/2):int(Ny/2+width_voxels/2)] = square(n0)
 nl_region = zeros(eps_r.shape)
 nl_region[int(Nx/2-L_chi3_voxels/2):int(Nx/2+L_chi3_voxels/2), int(Ny/2-width_voxels/2):int(Ny/2+width_voxels/2)] = 1
-simulation = Fdfd(omega, eps_r, dl, [15, 15], 'Ez')
+simulation = Simulation(omega, eps_r, dl, [15, 15], 'Ez')
 simulation.add_mode(n0, 'x', [17, int(Ny/2)], width_voxels*3)
 simulation.setup_modes()
 simulation.solve_fields()

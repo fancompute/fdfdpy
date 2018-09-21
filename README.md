@@ -4,13 +4,34 @@
 
 This is a pure Python implementation of the finite difference frequency domain (FDFD) method. It makes use of scipy, numpy, matplotlib, and the MKL Pardiso solver. fdfdpy currently supports 2D geometries
 
+## Installation
+
+    python setup.py install
+
+## Examples
+
+See the ipython notebooks in `notebooks`.
+
+## Unit Tests
+
+Some basic tests are included in `tests/`
+
+To run an example test, `tests/test_nonlinear_solvers.py`, either call
+
+	python -m unittest tests/test_nonlinear_solvers.py
+
+or
+
+	python tests/test_nonlinear_solvers.py
+
 ## Structure
 
 ### Initialization
 
-The `Fdfd` class is initialized as
+The `Simulation` class is initialized as
 
-	simulation = Fdfd(omega, eps_r, dl, NPML, pol, L0)
+	from fdfdpy import Simulation
+	simulation = Simulation(omega, eps_r, dl, NPML, pol, L0)
 
 - `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
@@ -58,11 +79,11 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 
 ### Setting a new permittivity
 
-If you want to change the permittivity distribution, you may run
+If you want to change the permittivity distribution, reassigning `eps_r`
 
-	simulation.reset_eps(new_eps)
+	simulation.eps_r = eps_new
 
-And this will reconstruct the system matrix and store it in `FDFD`. Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources.
+will automatically solve for a new system matrix with the new permittivity distribution.  Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources. <- I'll make this happen automatically later -T
 
 ### Plotting
 
@@ -93,4 +114,4 @@ To load the MKL solver:
 - [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
-- [ ] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
+- [x] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
