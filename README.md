@@ -38,7 +38,7 @@ The `Simulation` class is initialized as
 - `dl` : the spatial grid size in units of `L0`
 - `NPML` : defines number of PML grids `[# on x borders, # on y borders]`
 - `pol` : polarization, one of `{'Hz','Ez'}` where `z` is the transverse field.
-- `L0` : simulation length scale, default is 1e-6 meters (one micron)
+- `L0` : (optional) simulation length scale, default is 1e-6 meters (one micron)
 
 Creating a new Fdfd object solves for:
 
@@ -90,28 +90,15 @@ will automatically solve for a new system matrix with the new permittivity distr
 Primary fields (Hz/Ez) can be visualized using the included helper functions:
 
 	simulation.plt_re(outline=True, cbar=True)
-	simulation.plt_abs(outline=True, cbar=True)
+	simulation.plt_abs(outline=True, cbar=True, vmax=None)
 
 These optionally outline the permittivity with contours and can be supplied with a matplotlib axis handle to plot into.
-
-### Requirements
-
-- numpy
-- scipy
-- matplotlib
-
-To load the MKL solver:
-
-	git submodule update --init --recursive
 
 ### To Do
 
 #### Whenever
-- [x] Modal source.
-- [x] More dope plotting methods.
 - [ ] xrange, yrange labels on plots.
 - [ ] set modal source amplitude (and normalization)
-- [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
+- [ ] Add ability to run local jupyter notebooks running FDFD on parallel from server.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
-- [x] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
