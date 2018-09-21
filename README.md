@@ -4,20 +4,41 @@
 
 This is a pure Python implementation of the finite difference frequency domain (FDFD) method. It makes use of scipy, numpy, matplotlib, and the MKL Pardiso solver. fdfdpy currently supports 2D geometries
 
+## Installation
+
+    python setup.py install
+
+## Examples
+
+See the ipython notebooks in `notebooks`.
+
+## Unit Tests
+
+Some basic tests are included in `tests/`
+
+To run an example test, `tests/test_nonlinear_solvers.py`, either call
+
+	python -m unittest tests/test_nonlinear_solvers.py
+
+or
+
+	python tests/test_nonlinear_solvers.py
+
 ## Structure
 
 ### Initialization
 
-The `Fdfd` class is initialized as
+The `Simulation` class is initialized as
 
-	simulation = Fdfd(omega, eps_r, dl, NPML, pol, L0)
+	from fdfdpy import Simulation
+	simulation = Simulation(omega, eps_r, dl, NPML, pol, L0)
 
 - `omega` : the angular frequency in units of` 2 pi / seconds`
 - `eps_r` : a numpy array specifying the relative permittivity distribution
 - `dl` : the spatial grid size in units of `L0`
 - `NPML` : defines number of PML grids `[# on x borders, # on y borders]`
 - `pol` : polarization, one of `{'Hz','Ez'}` where `z` is the transverse field.
-- `L0` : simulation length scale, default is 1e-6 meters (one micron)
+- `L0` : (optional) simulation length scale, default is 1e-6 meters (one micron)
 
 Creating a new Fdfd object solves for:
 
@@ -58,39 +79,26 @@ Now, we have everything we need to solve the system for the electromagnetic fiel
 
 ### Setting a new permittivity
 
-If you want to change the permittivity distribution, you may run
+If you want to change the permittivity distribution, reassigning `eps_r`
 
-	simulation.reset_eps(new_eps)
+	simulation.eps_r = eps_new
 
-And this will reconstruct the system matrix and store it in `FDFD`. Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources.
+will automatically solve for a new system matrix with the new permittivity distribution.  Note that `simulation.setup_modes()` should also be called if the permittivity changed within the plane of any of the modal sources. <- I'll make this happen automatically later -T
 
 ### Plotting
 
 Primary fields (Hz/Ez) can be visualized using the included helper functions:
 
 	simulation.plt_re(outline=True, cbar=True)
-	simulation.plt_abs(outline=True, cbar=True)
+	simulation.plt_abs(outline=True, cbar=True, vmax=None)
 
 These optionally outline the permittivity with contours and can be supplied with a matplotlib axis handle to plot into.
-
-### Requirements
-
-- numpy
-- scipy
-- matplotlib
-
-To load the MKL solver:
-
-	git submodule update --init --recursive
 
 ### To Do
 
 #### Whenever
-- [x] Modal source.
-- [x] More dope plotting methods.
 - [ ] xrange, yrange labels on plots.
 - [ ] set modal source amplitude (and normalization)
-- [ ] Add ability to run local jupyter notebooks running FDFD on parallel from hera.
+- [ ] Add ability to run local jupyter notebooks running FDFD on parallel from server.
 - [ ] Save the factorization of `A` in the `Fdfd` object to be reused later if one has the same `A` but a different `b`.
 - [ ] Allow the source term to have `(Jx, Jy, Jz, Mx, My, Mz)`, which would be useful for adjoint stuff where the source is not necessarily along the `z` direction.
-- [ ] Clean up imports (e.g. `import numpy as np` to `from numpy import abs, zeros, ...`)
