@@ -32,7 +32,7 @@ def born_solve(simulation, nonlinear_fn, nl_region,
             Eprev = Ez
 
             # set new permittivity
-            eps_nl = eps_lin + nonlinear_fn(Eprev)*nl_region
+            eps_nl = eps_lin + nonlinear_fn(Eprev, eps_lin)*nl_region
 
             # get new fields
             simulation.eps_r = eps_nl
@@ -65,7 +65,7 @@ def born_solve(simulation, nonlinear_fn, nl_region,
             Eyprev = Ey
 
             # set new permittivity
-            eps_nl = eps_lin + (nonlinear_fn(Exprev) + nonlinear_fn(Eyprev))*nl_region
+            eps_nl = eps_lin + (nonlinear_fn(Exprev, eps_lin) + nonlinear_fn(Eyprev, eps_lin))*nl_region
 
             # get new fields
             simulation.eps_r = eps_nl
@@ -135,7 +135,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
                 break
 
         # Solve the fdfd problem with the final eps_nl
-        eps_nl = eps_lin + (nonlinear_fn(Ez)*nl_region)
+        eps_nl = eps_lin + (nonlinear_fn(Ez, eps_lin)*nl_region)
         simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields()
 
@@ -186,7 +186,7 @@ def newton_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
                 break
 
         # Solve the fdfd problem with the final eps_nl
-        eps_nl = eps_lin + (nonlinear_fn(Exprev) + nonlinear_fn(Eyprev))*nl_region
+        eps_nl = eps_lin + (nonlinear_fn(Exprev, eps_lin) + nonlinear_fn(Eyprev, eps_lin))*nl_region
         simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields(averaging=averaging)
 
@@ -263,7 +263,7 @@ def LM_solve(simulation, nonlinear_fn, nl_region, nonlinear_de,
                 break
 
         # Solve the fdfd problem with the final eps_nl
-        eps_nl = eps_lin + (nonlinear_fn(Ez)*nl_region)
+        eps_nl = eps_lin + (nonlinear_fn(Ez, eps_lin)*nl_region)
         simulation.eps_r = eps_nl
         (Hx, Hy, Ez) = simulation.solve_fields()
 
@@ -286,7 +286,7 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
     Nbig = simulation.Nx*simulation.Ny
 
     # Set nonlinear permittivity
-    eps_nl = eps_lin + sum(nonlinear_fn(e) for e in (Ex, Ey, Ez) if e is not None)*nl_region
+    eps_nl = eps_lin + sum(nonlinear_fn(e, eps_lin) for e in (Ex, Ey, Ez) if e is not None)*nl_region
 
     # Reset simulation for matrix A
     simulation.eps_r = eps_nl
@@ -300,7 +300,7 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
         fE = fE.reshape(Nbig, 1)
 
         if compute_jac:
-            dAde = (nonlinear_de(Ez)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
+            dAde = (nonlinear_de(Ez, eps_lin)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
             Jac11 = Anl + sp.spdiags(dAde*Ez.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
             Jac12 = sp.spdiags(np.conj(dAde)*Ez.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 
@@ -328,11 +328,11 @@ def nl_eq_and_jac(simulation, b, eps_lin, nonlinear_fn, nl_region, nonlinear_de,
 
         if compute_jac:
             if averaging:
-                dAdex = -grid_average(nonlinear_de(Ex)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_
-                dAdey = -grid_average(nonlinear_de(Ey)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_
+                dAdex = -grid_average(nonlinear_de(Ex, eps_lin)*nl_region, 'x').reshape((-1,))*omega**2*EPSILON_0_
+                dAdey = -grid_average(nonlinear_de(Ey, eps_lin)*nl_region, 'y').reshape((-1,))*omega**2*EPSILON_0_
             else:
-                dAdex = -(nonlinear_de(Ex)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
-                dAdey = -(nonlinear_de(Ey)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
+                dAdex = -(nonlinear_de(Ex, eps_lin)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
+                dAdey = -(nonlinear_de(Ey, eps_lin)*nl_region).reshape((-1,))*omega**2*EPSILON_0_
 
             Jac11xx = sp.spdiags(dAdex*Ex.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
             Jac11xy = sp.spdiags(dAdex*Ey.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)

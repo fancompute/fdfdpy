@@ -30,10 +30,10 @@ class Test_NLSolve(unittest.TestCase):
         eps_r = np.ones((Nx, Ny))
         eps_r[:, int(Ny/2-width_voxels/2):int(Ny/2+width_voxels/2)] = np.square(n0)
 
-        def kerr_nonlinearity(e):
+        def kerr_nonlinearity(e, eps_r):
             return 3*chi3/np.square(simulation.L0)*np.square(np.abs(e))
 
-        def dkerr_de(e):
+        def dkerr_de(e, eps_r):
             return 3*chi3/np.square(simulation.L0)*np.conj(e)
 
         nl_region = np.zeros(eps_r.shape)
