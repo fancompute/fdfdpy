@@ -342,7 +342,7 @@ class Simulation:
 
         eps_val = np.abs(eps_r)
         outline_val = np.abs(eps_r)
-        vmin = 1
+        vmin = np.abs(eps_r).min()
         vmax = np.abs(eps_r).max()
         cmap = "Greys"
 
