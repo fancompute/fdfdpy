@@ -34,7 +34,7 @@ class Simulation:
         self.yrange = [0, float(Ny*self.dl)]
 
         # construct the system matrix
-        self.eps_r = eps_r
+        self.eps_r = deepcopy(eps_r)
         self.modes = []
         self.nonlinearity = []
         self.eps_nl = np.zeros(eps_r.shape)
