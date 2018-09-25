@@ -63,7 +63,7 @@ class Simulation:
             self.dnl_de += nli.dnl_de(e, eps_lin)
             self.dnl_deps += nli.dnl_deps(e, eps_lin)
 
-    def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale='False', eps_max=None):
+    def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale=False, eps_max=None):
         # adds a nonlinearity to the simulation
         new_nl = Nonlinearity(chi/np.square(self.L0), nl_region, nl_type, eps_scale, eps_max)
         self.nonlinearity.append(new_nl)
@@ -193,7 +193,7 @@ class Simulation:
                                      "{'born', 'newton', 'LM'}")
 
             # reset the permittivity to the original value
-            self.reset_eps(eps_orig)
+            self.eps_r = eps_orig
 
             # return final nonlinear fields and an array of the convergences
 
@@ -227,7 +227,7 @@ class Simulation:
 
             # reset the permittivity to the original value
             # (note, not self.reset_eps or else the fields get destroyed)
-            self.reset_eps(eps_orig)
+            self.eps_r = eps_orig
 
             # return final nonlinear fields and an array of the convergences
 

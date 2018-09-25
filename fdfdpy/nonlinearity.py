@@ -16,7 +16,7 @@ class Nonlinearity:
         self.dnl_deps = []
 
         if self.nl_type=='kerr':
-            if self.eps_scale=='True':
+            if self.eps_scale==True:
                 if self.eps_max==None:
                     raise AssertionError("Must provide eps_max when eps_scale is True") 
 
