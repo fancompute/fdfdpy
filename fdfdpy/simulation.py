@@ -7,6 +7,7 @@ from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.plot import plt_base, plt_base_eps
 from fdfdpy.nonlinear_solvers import born_solve, newton_solve, LM_solve
 from fdfdpy.source.mode import mode
+from fdfdpy.nonlinearity import Nonlinearity
 from fdfdpy.constants import (DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT,
                               DEFAULT_SOLVER, EPSILON_0, MU_0)
 
@@ -35,6 +36,10 @@ class Simulation:
         # construct the system matrix
         self.eps_r = eps_r
         self.modes = []
+        self.nonlinearity = []
+        self.eps_nl = np.zeros(eps_r.shape)
+        self.dnl_de = np.zeros(eps_r.shape)
+        self.dnl_deps = np.zeros(eps_r.shape)
 
     def setup_modes(self):
         # calculates
@@ -47,6 +52,21 @@ class Simulation:
         new_mode = mode(neff, direction_normal, center, width,
                         scale=scale, order=order)
         self.modes.append(new_mode)
+
+    def compute_nl(self, e, eps_lin):
+        # evaluates the nonlinear functions for a field e
+        self.eps_nl = np.zeros(eps_lin.shape)
+        self.dnl_de = np.zeros(eps_lin.shape, dtype=np.complex128)
+        self.dnl_deps = np.zeros(eps_lin.shape, dtype=np.complex128)
+        for nli in self.nonlinearity:
+            self.eps_nl += nli.eps_nl(e, eps_lin)
+            self.dnl_de += nli.dnl_de(e, eps_lin)
+            self.dnl_deps += nli.dnl_deps(e, eps_lin)
+
+    def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale='False', eps_max=None):
+        # adds a nonlinearity to the simulation
+        new_nl = Nonlinearity(chi/np.square(self.L0), nl_region, nl_type, eps_scale, eps_max)
+        self.nonlinearity.append(new_nl)
 
     @property
     def eps_r(self):
@@ -133,7 +153,7 @@ class Simulation:
         else:
             raise ValueError('Invalid polarization: {}'.format(str(self.pol)))
 
-    def solve_fields_nl(self, nonlinear_fn, nl_region, dnl_de=None,
+    def solve_fields_nl(self,
                         timing=False, averaging=True,
                         Estart=None, solver_nl='born', conv_threshold=1e-10,
                         max_num_iter=50, solver=DEFAULT_SOLVER,
@@ -143,16 +163,11 @@ class Simulation:
         # store the original permittivity
         eps_orig = deepcopy(self.eps_r)
 
-        # if the nonlinear objects were not supplied, throw an error
-        if nonlinear_fn is None or nl_region is None:
-            raise ValueError("'nonlinear_fn' and 'nl_region' must be supplied")
-
         if self.pol == 'Ez':
             # if born solver
             if solver_nl == 'born':
 
-                (Hx, Hy, Ez, conv_array) = born_solve(self, nonlinear_fn,
-                                                      nl_region, Estart,
+                (Hx, Hy, Ez, conv_array) = born_solve(self, Estart,
                                                       conv_threshold,
                                                       max_num_iter,
                                                       averaging=averaging)
@@ -160,26 +175,14 @@ class Simulation:
             # if newton solver
             elif solver_nl == 'newton':
 
-                # newton needs the derivative of the nonlinearity.
-                if dnl_de is None:
-                    raise ValueError("'dnl_de' argument must be set to run"
-                                     " Newton solve")
-
-                (Hx, Hy, Ez, conv_array) = newton_solve(self, nonlinear_fn,
-                                                        nl_region, dnl_de,
+                (Hx, Hy, Ez, conv_array) = newton_solve(self,
                                                         Estart, conv_threshold,
                                                         max_num_iter,
                                                         averaging=averaging)
 
             elif solver_nl == 'LM':
 
-                # LM needs the derivative of the nonlinearity.
-                if dnl_de is None:
-                    raise ValueError("'dnl_de' argument must be set to run"
-                                     " LM solve")
-
-                (Hx, Hy, Ez, conv_array) = LM_solve(self, nonlinear_fn,
-                                                    nl_region, dnl_de, Estart,
+                (Hx, Hy, Ez, conv_array) = LM_solve(self, Estart,
                                                     conv_threshold,
                                                     max_num_iter,
                                                     averaging=averaging)
@@ -204,8 +207,7 @@ class Simulation:
             # if born solver
             if solver_nl == 'born':
 
-                (Ex, Ey, Hz, conv_array) = born_solve(self, nonlinear_fn,
-                                                      nl_region, Estart,
+                (Ex, Ey, Hz, conv_array) = born_solve(self, Estart,
                                                       conv_threshold,
                                                       max_num_iter,
                                                       averaging=averaging)
@@ -213,12 +215,7 @@ class Simulation:
             # if newton solver
             elif solver_nl == 'newton':
 
-                # newton needs the derivative of the nonlinearity.
-                if dnl_de is None:
-                    raise ValueError("'dnl_de' argument must be set to run "
-                                     "Newton solve")
-                (Ex, Ey, Hz, conv_array) = newton_solve(self, nonlinear_fn,
-                                                        nl_region, dnl_de,
+                (Ex, Ey, Hz, conv_array) = newton_solve(self,
                                                         Estart, conv_threshold,
                                                         max_num_iter,
                                                         averaging=averaging)
