@@ -33,14 +33,14 @@ class Simulation:
         self.xrange = [0, float(Nx*self.dl)]
         self.yrange = [0, float(Ny*self.dl)]
 
+        # construct the system matrix
+        self.eps_r = eps_r.astype(np.complex128)
+
         self.modes = []
         self.nonlinearity = []
         self.eps_nl = np.zeros(eps_r.shape)
         self.dnl_de = np.zeros(eps_r.shape)
         self.dnl_deps = np.zeros(eps_r.shape)
-
-        # construct the system matrix
-        self.eps_r = eps_r.astype(np.complex128)
 
     def setup_modes(self):
         # calculates
@@ -54,15 +54,15 @@ class Simulation:
                         scale=scale, order=order)
         self.modes.append(new_mode)
 
-    def compute_nl(self, e, eps_lin):
+    def compute_nl(self, e):
         # evaluates the nonlinear functions for a field e
-        self.eps_nl = np.zeros(eps_lin.shape, dtype=np.complex128)
-        self.dnl_de = np.zeros(eps_lin.shape, dtype=np.complex128)
-        self.dnl_deps = np.zeros(eps_lin.shape, dtype=np.complex128)
+        self.eps_nl = np.zeros(self.eps_r.shape, dtype=np.complex128)
+        self.dnl_de = np.zeros(self.eps_r.shape, dtype=np.complex128)
+        self.dnl_deps = np.zeros(self.eps_r.shape, dtype=np.complex128)
         for nli in self.nonlinearity:
-            self.eps_nl += nli.eps_nl(e, eps_lin)
-            self.dnl_de += nli.dnl_de(e, eps_lin)
-            self.dnl_deps += nli.dnl_deps(e, eps_lin)
+            self.eps_nl += nli.eps_nl(e, self.eps_r)
+            self.dnl_de += nli.dnl_de(e, self.eps_r)
+            self.dnl_deps += nli.dnl_deps(e, self.eps_r)
         (A, derivs) = construct_A(self.omega, self.xrange, self.yrange,
                                   self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
                                   matrix_format=DEFAULT_MATRIX_FORMAT,
@@ -82,7 +82,7 @@ class Simulation:
     def eps_r(self, new_eps):
         self.__eps_r = new_eps
         (A, derivs) = construct_A(self.omega, self.xrange, self.yrange,
-                                  self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
+                                  self.eps_r, self.NPML, self.pol, self.L0,
                                   matrix_format=DEFAULT_MATRIX_FORMAT,
                                   timing=False)
         self.A = A

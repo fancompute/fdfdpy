@@ -30,8 +30,7 @@ def born_solve(simulation,
 			Eprev = Ez
 
 			# set new permittivity
-			simulation.compute_nl(Eprev, simulation.eps_r)
-			print(simulation.eps_nl.max())
+			simulation.compute_nl(Eprev)
 
 			(Hx, Hy, Ez) = simulation.solve_fields()
 
@@ -62,9 +61,9 @@ def born_solve(simulation,
 			Eyprev = Ey
 
 			# set new permittivity
-			simulation.compute_nl(Exprev, eps_lin)
+			simulation.compute_nl(Exprev)
 			eps_nl = eps_lin + simulation.eps_nl
-			simulation.compute_nl(Eyprev, eps_lin)
+			simulation.compute_nl(Eyprev)
 			eps_nl += simulation.eps_nl
 
 			# get new fields
@@ -90,9 +89,6 @@ def newton_solve(simulation,
 				 matrix_format=DEFAULT_MATRIX_FORMAT):
 	# solves for the nonlinear fields using Newton's method
 
-	eps_lin = simulation.eps_r
-	b = simulation.src
-
 	# Stores convergence parameters
 	conv_array = np.zeros((max_num_iter, 1))
 
@@ -110,7 +106,7 @@ def newton_solve(simulation,
 		for istep in range(max_num_iter):
 			Eprev = Ez
 
-			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, Ez=Eprev,
+			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, Ez=Eprev,
 											   matrix_format=matrix_format)
 
 			# Note: Newton's method is defined as a linear problem to avoid inverting the Jacobian
@@ -133,9 +129,7 @@ def newton_solve(simulation,
 				break
 
 		# Solve the fdfd problem with the final eps_nl
-		simulation.compute_nl(Ez, eps_lin)
-		eps_nl = eps_lin + simulation.eps_nl
-		simulation.eps_r = eps_nl
+		simulation.compute_nl(Ez)
 		(Hx, Hy, Ez) = simulation.solve_fields()
 
 		if convergence > conv_threshold:
@@ -183,9 +177,9 @@ def newton_solve(simulation,
 				break
 
 		# Solve the fdfd problem with the final eps_nl
-		simulation.compute_nl(Ex, eps_lin)
+		simulation.compute_nl(Ex)
 		eps_nl = eps_lin + simulation.eps_nl
-		simulation.compute_nl(Ey, eps_lin)
+		simulation.compute_nl(Ey)
 		eps_nl += simulation.eps_nl
 
 		simulation.eps_r = eps_nl
@@ -262,7 +256,7 @@ def LM_solve(simulation,
 				break
 
 		# Solve the fdfd problem with the final eps_nl
-		simulation.compute_nl(Ez, eps_lin)
+		simulation.compute_nl(Ez)
 		eps_nl = eps_lin + simulation.eps_nl
 		simulation.eps_r = eps_nl
 		(Hx, Hy, Ez) = simulation.solve_fields()
@@ -273,7 +267,7 @@ def LM_solve(simulation,
 		return (Hx, Hy, Ez, conv_array)
 
 
-def nl_eq_and_jac(simulation, b, eps_lin,
+def nl_eq_and_jac(simulation,
 				  averaging=True, Ex=None, Ey=None, Ez=None, compute_jac=True,
 				  matrix_format=DEFAULT_MATRIX_FORMAT):
 	# Evaluates the nonlinear function f(E) that defines the problem to solve f(E) = 0, as well as the Jacobian df/dE
@@ -285,27 +279,16 @@ def nl_eq_and_jac(simulation, b, eps_lin,
 
 	Nbig = simulation.Nx*simulation.Ny
 
-	# Set nonlinear permittivity
-	eps_nl = eps_lin
-
-	for e in (Ex, Ey, Ez):
-		if e is not None:
-			simulation.compute_nl(e, eps_lin)
-			eps_nl += simulation.eps_nl
-
-	# Reset simulation for matrix A
-	simulation.eps_r = eps_nl
-
 	if simulation.pol == 'Ez':
-
+		simulation.compute_nl(Ez)
 		Anl = simulation.A
-		fE = (Anl.dot(Ez.reshape(-1,)) - b.reshape(-1,)*1j*omega)
+		fE = (Anl.dot(Ez.reshape(-1,)) - simulation.src.reshape(-1,)*1j*omega)
 
 		# Make it explicitly a column vector
 		fE = fE.reshape(Nbig, 1)
 
 		if compute_jac:
-			simulation.compute_nl(Ez, eps_lin)
+			simulation.compute_nl(Ez)
 			dAde = (simulation.dnl_de).reshape((-1,))*omega**2*EPSILON_0_
 			Jac11 = Anl + sp.spdiags(dAde*Ez.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
 			Jac12 = sp.spdiags(np.conj(dAde)*Ez.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
