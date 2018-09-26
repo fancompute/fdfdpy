@@ -121,7 +121,7 @@ def nl_eq_and_jac(simulation,
 
 	if simulation.pol == 'Ez':
 		simulation.compute_nl(Ez)
-		Anl = simulation.A
+		Anl = simulation.A + simulation.Anl
 		fE = (Anl.dot(Ez.reshape(-1,)) - simulation.src.reshape(-1,)*1j*omega)
 
 		# Make it explicitly a column vector

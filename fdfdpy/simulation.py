@@ -34,7 +34,7 @@ class Simulation:
         self.yrange = [0, float(Ny*self.dl)]
 
         # construct the system matrix
-        self.eps_r = eps_r.astype(np.complex128)
+        self.eps_r = eps_r
 
         self.modes = []
         self.nonlinearity = []
@@ -54,16 +54,17 @@ class Simulation:
                         scale=scale, order=order)
         self.modes.append(new_mode)
 
-    def compute_nl(self, e):
+    def compute_nl(self, e, matrix_format=DEFAULT_MATRIX_FORMAT):
         # evaluates the nonlinear functions for a field e
-        self.eps_nl = np.zeros(self.eps_r.shape, dtype=np.complex128)
-        self.dnl_de = np.zeros(self.eps_r.shape, dtype=np.complex128)
-        self.dnl_deps = np.zeros(self.eps_r.shape, dtype=np.complex128)
+        self.eps_nl = np.zeros(self.eps_r.shape)
+        self.dnl_de = np.zeros(self.eps_r.shape)
+        self.dnl_deps = np.zeros(self.eps_r.shape)
         for nli in self.nonlinearity:
-            self.eps_nl += nli.eps_nl(e, self.eps_r)
-            self.dnl_de += nli.dnl_de(e, self.eps_r)
-            self.dnl_deps += nli.dnl_deps(e, self.eps_r)
-        Anl = 
+            self.eps_nl = self.eps_nl + nli.eps_nl(e, self.eps_r)
+            self.dnl_de = self.dnl_de + nli.dnl_de(e, self.eps_r)
+            self.dnl_deps = self.dnl_deps + nli.dnl_deps(e, self.eps_r)
+        Nbig = self.Nx*self.Ny
+        Anl = sp.spdiags(self.omega**2*EPSILON_0*self.L0*self.eps_nl.reshape((-1,)), 0, Nbig, Nbig, format=matrix_format)
         self.Anl = Anl
 
     def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale=False, eps_max=None):
@@ -106,11 +107,11 @@ class Simulation:
 
         if include_nl==False:
             eps_tot = self.eps_r
-            X = solver_direct(simulation.A, self.src*1j*self.omega, timing=timing,
+            X = solver_direct(self.A, self.src*1j*self.omega, timing=timing,
                 solver=solver)
         else:
             eps_tot = self.eps_r + self.eps_nl
-            X = solver_direct(simulation.A + simulation.Anl, self.src*1j*self.omega, timing=timing,
+            X = solver_direct(self.A + self.Anl, self.src*1j*self.omega, timing=timing,
                 solver=solver)
 
 
@@ -165,7 +166,7 @@ class Simulation:
 
     def solve_fields_nl(self,
                         timing=False, averaging=True,
-                        Estart=None, solver_nl='born', conv_threshold=1e-10,
+                        Estart=None, solver_nl='newton', conv_threshold=1e-10,
                         max_num_iter=50, solver=DEFAULT_SOLVER,
                         matrix_format=DEFAULT_MATRIX_FORMAT):
         # solves for the nonlinear fields of the simulation.
