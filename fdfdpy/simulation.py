@@ -33,13 +33,14 @@ class Simulation:
         self.xrange = [0, float(Nx*self.dl)]
         self.yrange = [0, float(Ny*self.dl)]
 
-        # construct the system matrix
-        self.eps_r = deepcopy(eps_r)
         self.modes = []
         self.nonlinearity = []
         self.eps_nl = np.zeros(eps_r.shape)
         self.dnl_de = np.zeros(eps_r.shape)
         self.dnl_deps = np.zeros(eps_r.shape)
+
+        # construct the system matrix
+        self.eps_r = eps_r.astype(np.complex128)
 
     def setup_modes(self):
         # calculates
@@ -55,13 +56,18 @@ class Simulation:
 
     def compute_nl(self, e, eps_lin):
         # evaluates the nonlinear functions for a field e
-        self.eps_nl = np.zeros(eps_lin.shape)
+        self.eps_nl = np.zeros(eps_lin.shape, dtype=np.complex128)
         self.dnl_de = np.zeros(eps_lin.shape, dtype=np.complex128)
         self.dnl_deps = np.zeros(eps_lin.shape, dtype=np.complex128)
         for nli in self.nonlinearity:
             self.eps_nl += nli.eps_nl(e, eps_lin)
             self.dnl_de += nli.dnl_de(e, eps_lin)
             self.dnl_deps += nli.dnl_deps(e, eps_lin)
+        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange,
+                                  self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
+                                  matrix_format=DEFAULT_MATRIX_FORMAT,
+                                  timing=False)
+        self.A = A
 
     def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale=False, eps_max=None):
         # adds a nonlinearity to the simulation
@@ -73,10 +79,10 @@ class Simulation:
         return self.__eps_r
 
     @eps_r.setter
-    def eps_r(self, eps_r):
-        self.__eps_r = eps_r
+    def eps_r(self, new_eps):
+        self.__eps_r = new_eps
         (A, derivs) = construct_A(self.omega, self.xrange, self.yrange,
-                                  self.__eps_r, self.NPML, self.pol, self.L0,
+                                  self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
                                   matrix_format=DEFAULT_MATRIX_FORMAT,
                                   timing=False)
         self.A = A
@@ -87,7 +93,7 @@ class Simulation:
         # in here for compatibility for now..
 
         self.eps_r = new_eps
-        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
+        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
                                 matrix_format=DEFAULT_MATRIX_FORMAT,
                                 timing=False)
         self.A = A
@@ -110,13 +116,13 @@ class Simulation:
 
         if self.pol == 'Hz':
             if averaging:
-                eps_x = grid_average(EPSILON_0_*self.eps_r, 'x')
+                eps_x = grid_average(EPSILON_0_*(self.eps_r+self.eps_nl), 'x')
                 vector_eps_x = eps_x.reshape((-1,))
-                eps_y = grid_average(EPSILON_0_*self.eps_r, 'y')
+                eps_y = grid_average(EPSILON_0_*(self.eps_r+self.eps_nl), 'y')
                 vector_eps_y = eps_y.reshape((-1,))
             else:
-                vector_eps_x = EPSILON_0_*self.eps_r.reshape((-1,))
-                vector_eps_y = EPSILON_0_*self.eps_r.reshape((-1,))
+                vector_eps_x = EPSILON_0_*(self.eps_r+self.eps_nl).reshape((-1,))
+                vector_eps_y = EPSILON_0_*(self.eps_r+self.eps_nl).reshape((-1,))
 
             T_eps_x_inv = sp.spdiags(1/vector_eps_x, 0, M, M,
                                   format=matrix_format)
@@ -160,9 +166,6 @@ class Simulation:
                         matrix_format=DEFAULT_MATRIX_FORMAT):
         # solves for the nonlinear fields of the simulation.
 
-        # store the original permittivity
-        eps_orig = deepcopy(self.eps_r)
-
         if self.pol == 'Ez':
             # if born solver
             if solver_nl == 'born':
@@ -192,8 +195,6 @@ class Simulation:
                 raise AssertionError("solver must be one of "
                                      "{'born', 'newton', 'LM'}")
 
-            # reset the permittivity to the original value
-            self.eps_r = eps_orig
 
             # return final nonlinear fields and an array of the convergences
 
@@ -224,10 +225,6 @@ class Simulation:
             else:
                 raise AssertionError("solver must be one of "
                                      "{'born', 'newton'}")
-
-            # reset the permittivity to the original value
-            # (note, not self.reset_eps or else the fields get destroyed)
-            self.eps_r = eps_orig
 
             # return final nonlinear fields and an array of the convergences
 

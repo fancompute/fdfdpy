@@ -17,8 +17,6 @@ def born_solve(simulation,
 	# Stores convergence parameters
 	conv_array = np.zeros((max_num_iter, 1))
 
-	eps_lin = simulation.eps_r
-
 	if simulation.pol == 'Ez':
 		# Defne the starting field for the simulation
 		if Estart is None:
@@ -32,11 +30,9 @@ def born_solve(simulation,
 			Eprev = Ez
 
 			# set new permittivity
-			simulation.compute_nl(Eprev, eps_lin)
-			eps_nl = eps_lin + simulation.eps_nl
+			simulation.compute_nl(Eprev, simulation.eps_r)
+			print(simulation.eps_nl.max())
 
-			# get new fields
-			simulation.eps_r = eps_nl
 			(Hx, Hy, Ez) = simulation.solve_fields()
 
 			# get convergence and break

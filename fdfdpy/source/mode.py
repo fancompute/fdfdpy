@@ -29,7 +29,7 @@ class mode:
         # get some information from the permittivity
         original_eps = simulation.eps_r
         (Nx, Ny) = original_eps.shape
-        eps_max = np.max(original_eps)
+        eps_max = np.max(np.abs(original_eps))
         norm_eps = np.ones((Nx, Ny))
 
         # make a new simulation and get a new probe center
