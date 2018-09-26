@@ -63,11 +63,8 @@ class Simulation:
             self.eps_nl += nli.eps_nl(e, self.eps_r)
             self.dnl_de += nli.dnl_de(e, self.eps_r)
             self.dnl_deps += nli.dnl_deps(e, self.eps_r)
-        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange,
-                                  self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
-                                  matrix_format=DEFAULT_MATRIX_FORMAT,
-                                  timing=False)
-        self.A = A
+        Anl = 
+        self.Anl = Anl
 
     def add_nl(self, chi, nl_region, nl_type='kerr', eps_scale=False, eps_max=None):
         # adds a nonlinearity to the simulation
@@ -109,16 +106,13 @@ class Simulation:
 
         if include_nl==False:
             eps_tot = self.eps_r
+            X = solver_direct(simulation.A, self.src*1j*self.omega, timing=timing,
+                solver=solver)
         else:
             eps_tot = self.eps_r + self.eps_nl
+            X = solver_direct(simulation.A + simulation.Anl, self.src*1j*self.omega, timing=timing,
+                solver=solver)
 
-        (A, _) = construct_A(self.omega, self.xrange, self.yrange,
-                                  eps_tot, self.NPML, self.pol, self.L0,
-                                  matrix_format=DEFAULT_MATRIX_FORMAT,
-                                  timing=False)
-
-        X = solver_direct(A, self.src*1j*self.omega, timing=timing,
-                          solver=solver)
 
         (Nx, Ny) = self.src.shape
         M = Nx*Ny
