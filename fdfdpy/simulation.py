@@ -5,7 +5,7 @@ from copy import deepcopy
 from fdfdpy.linalg import construct_A, solver_direct, grid_average
 from fdfdpy.derivatives import unpack_derivs
 from fdfdpy.plot import plt_base, plt_base_eps
-from fdfdpy.nonlinear_solvers import born_solve, newton_solve, LM_solve
+from fdfdpy.nonlinear_solvers import born_solve, newton_solve
 from fdfdpy.source.mode import mode
 from fdfdpy.nonlinearity import Nonlinearity
 from fdfdpy.constants import (DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT,
@@ -93,21 +93,31 @@ class Simulation:
         # in here for compatibility for now..
 
         self.eps_r = new_eps
-        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r + self.eps_nl, self.NPML, self.pol, self.L0,
+        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
                                 matrix_format=DEFAULT_MATRIX_FORMAT,
                                 timing=False)
         self.A = A
         self.derivs = derivs
         self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
 
-    def solve_fields(self, timing=False, averaging=True, solver=DEFAULT_SOLVER,
+    def solve_fields(self, include_nl=False, timing=False, averaging=True, solver=DEFAULT_SOLVER,
                      matrix_format=DEFAULT_MATRIX_FORMAT):
         # performs direct solve for A given source
 
         EPSILON_0_ = EPSILON_0*self.L0
         MU_0_ = MU_0*self.L0
 
-        X = solver_direct(self.A, self.src*1j*self.omega, timing=timing,
+        if include_nl==False:
+            eps_tot = self.eps_r
+        else:
+            eps_tot = self.eps_r + self.eps_nl
+
+        (A, _) = construct_A(self.omega, self.xrange, self.yrange,
+                                  eps_tot, self.NPML, self.pol, self.L0,
+                                  matrix_format=DEFAULT_MATRIX_FORMAT,
+                                  timing=False)
+
+        X = solver_direct(A, self.src*1j*self.omega, timing=timing,
                           solver=solver)
 
         (Nx, Ny) = self.src.shape
@@ -116,13 +126,13 @@ class Simulation:
 
         if self.pol == 'Hz':
             if averaging:
-                eps_x = grid_average(EPSILON_0_*(self.eps_r+self.eps_nl), 'x')
+                eps_x = grid_average(EPSILON_0_*(eps_tot), 'x')
                 vector_eps_x = eps_x.reshape((-1,))
-                eps_y = grid_average(EPSILON_0_*(self.eps_r+self.eps_nl), 'y')
+                eps_y = grid_average(EPSILON_0_*(eps_tot), 'y')
                 vector_eps_y = eps_y.reshape((-1,))
             else:
-                vector_eps_x = EPSILON_0_*(self.eps_r+self.eps_nl).reshape((-1,))
-                vector_eps_y = EPSILON_0_*(self.eps_r+self.eps_nl).reshape((-1,))
+                vector_eps_x = EPSILON_0_*(eps_tot).reshape((-1,))
+                vector_eps_y = EPSILON_0_*(eps_tot).reshape((-1,))
 
             T_eps_x_inv = sp.spdiags(1/vector_eps_x, 0, M, M,
                                   format=matrix_format)

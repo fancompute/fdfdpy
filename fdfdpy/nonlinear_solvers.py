@@ -32,7 +32,7 @@ def born_solve(simulation,
 			# set new permittivity
 			simulation.compute_nl(Eprev)
 
-			(Hx, Hy, Ez) = simulation.solve_fields()
+			(Hx, Hy, Ez) = simulation.solve_fields(include_nl=True)
 
 			# get convergence and break
 			convergence = la.norm(Ez - Eprev)/la.norm(Ez)
@@ -130,7 +130,7 @@ def newton_solve(simulation,
 
 		# Solve the fdfd problem with the final eps_nl
 		simulation.compute_nl(Ez)
-		(Hx, Hy, Ez) = simulation.solve_fields()
+		(Hx, Hy, Ez) = simulation.solve_fields(include_nl=True)
 
 		if convergence > conv_threshold:
 			print("the simulation did not converge, reached {}".format(convergence))
@@ -189,83 +189,6 @@ def newton_solve(simulation,
 			print("the simulation did not converge, reached {}".format(convergence))
 
 		return (Ex, Ey, Hz, conv_array)
-
-
-def LM_solve(simulation, 
-			 Estart=None, conv_threshold=1e-10, max_num_iter=50,
-			 averaging=True, solver=DEFAULT_SOLVER, jac_solver='c2r',
-			 matrix_format=DEFAULT_MATRIX_FORMAT, lambda0=1e-2):
-	# solves for the nonlinear fields using Newton's method
-
-	eps_lin = simulation.eps_r
-	b = simulation.src
-
-	# Stores convergence parameters
-	conv_array = np.zeros((max_num_iter, 1))
-
-	# num. columns and rows of A
-	Nbig = simulation.Nx*simulation.Ny
-
-	if simulation.pol == 'Ez':
-		# Defne the starting field for the simulation
-		if Estart is None:
-			(Hx, Hy, Ez) = simulation.solve_fields()
-		else:
-			Ez = Estart
-
-		# Solve iteratively
-		for istep in range(max_num_iter):
-
-			Eprev = Ez
-
-			(fx, Jac11, Jac12) = nl_eq_and_jac(simulation, b, eps_lin, Ez=Eprev,
-											   matrix_format=matrix_format)
-
-			# Construct the matrix blocks of J.T.dot(J)
-			JTJ11 = Jac11.transpose().np.conjugate().dot(Jac11) + Jac12.transpose().dot(Jac12.np.conjugate())
-			JTJ11 = JTJ11 + sp.spdiags(lambda0*JTJ11.diagonal(), 0, Nbig, Nbig, format=matrix_format)
-			JTJ12 = Jac11.transpose().np.conjugate().dot(Jac12) + Jac12.transpose().dot(Jac11.np.conjugate())
-						
-			# Vector J.T.dot(fx)
-			JTf = Jac11.transpose().np.conjugate().dot(fx) + Jac12.transpose().dot(np.conj(fx))
-			Ediff = solver_complex2real(JTJ11, JTJ12, -JTf)
-			Etest = Eprev + Ediff[range(Nbig)].reshape(simulation.Nx, simulation.Ny)
-
-			ftest = nl_eq_and_jac(simulation, b, eps_lin,
-											Ez=Etest, matrix_format=matrix_format, compute_jac=False)
-
-			if la.norm(ftest) < la.norm(fx):
-				lambda0 = lambda0/10
-				Ez = Etest
-			else:
-				lambda0 = lambda0*10
-
-			# Ediff = -JTf.reshape((-1,))/(JTJ11.diagonal())
-			# Ez = Eprev + lambda0*Ediff.reshape(simulation.Nx, simulation.Ny)
-			# print(max(Ediff))
-
-			# print("ftest = ", la.norm(ftest))
-			# print("fx = ", la.norm(fx)/la.norm(b)/simulation.omega)
-			# print(lambda0)
-
-			convergence = la.norm(fx)/(la.norm(b)*simulation.omega)
-			conv_array[istep] = convergence
-
-			# if below threshold, break and return
-			if convergence < conv_threshold:
-				break
-
-		# Solve the fdfd problem with the final eps_nl
-		simulation.compute_nl(Ez)
-		eps_nl = eps_lin + simulation.eps_nl
-		simulation.eps_r = eps_nl
-		(Hx, Hy, Ez) = simulation.solve_fields()
-
-		if convergence > conv_threshold:
-			print("the simulation did not converge, reached {}".format(convergence))
-
-		return (Hx, Hy, Ez, conv_array)
-
 
 def nl_eq_and_jac(simulation,
 				  averaging=True, Ex=None, Ey=None, Ez=None, compute_jac=True,
