@@ -5,7 +5,7 @@ from fdfdpy.linalg import *
 
 class Nonlinearity:
 
-    def __init__(self, chi, nl_region, nl_type, eps_scale, eps_max):
+    def __init__(self, chi, nl_region, nl_type='kerr', eps_scale=False, eps_max=None):
         self.chi = chi
         self.nl_region = nl_region
         self.nl_type = nl_type
@@ -15,9 +15,9 @@ class Nonlinearity:
         self.dnl_de = []
         self.dnl_deps = []
 
-        if self.nl_type=='kerr':
-            if self.eps_scale==True:
-                if self.eps_max==None:
+        if self.nl_type == 'kerr':
+            if self.eps_scale == True:
+                if self.eps_max == None:
                     raise AssertionError("Must provide eps_max when eps_scale is True") 
 
                 else:
