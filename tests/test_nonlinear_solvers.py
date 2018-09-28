@@ -30,18 +30,13 @@ class Test_NLSolve(unittest.TestCase):
         eps_r = np.ones((Nx, Ny))
         eps_r[:, int(Ny/2-width_voxels/2):int(Ny/2+width_voxels/2)] = np.square(n0)
 
-        def kerr_nonlinearity(e):
-            return 3*chi3/np.square(simulation.L0)*np.square(np.abs(e))
-
-        def dkerr_de(e):
-            return 3*chi3/np.square(simulation.L0)*np.conj(e)
-
         nl_region = np.zeros(eps_r.shape)
         nl_region[int(Nx/2-L_chi3_voxels/2):int(Nx/2+L_chi3_voxels/2), int(Ny/2-width_voxels/2):int(Ny/2+width_voxels/2)] = 1
 
         simulation = Simulation(omega, eps_r, dl, [15, 15], 'Ez')
         simulation.add_mode(n0, 'x', [17, int(Ny/2)], width_voxels*3)
         simulation.setup_modes()
+        simulation.add_nl(chi3, nl_region, eps_scale=True, eps_max=np.max(eps_r))
 
         srcval_vec = np.logspace(1, 3, 3)
         pwr_vec = np.array([])
@@ -51,15 +46,11 @@ class Test_NLSolve(unittest.TestCase):
             simulation.src *= srcval
 
             # Newton
-            simulation.solve_fields_nl(kerr_nonlinearity, nl_region,
-                                       dnl_de=dkerr_de, timing=False, averaging=True,
-                                       Estart=None, solver_nl='newton')
+            simulation.solve_fields_nl(solver_nl='newton')
             E_newton = simulation.fields["Ez"]
 
             # Born
-            simulation.solve_fields_nl(kerr_nonlinearity, nl_region,
-                                       dnl_de=dkerr_de, timing=False, averaging=True,
-                                       Estart=None, solver_nl='born')
+            simulation.solve_fields_nl(solver_nl='born')
             E_born = simulation.fields["Ez"]
 
             # More solvers (if any) should be added here with corresponding calls to assert_allclose() below
