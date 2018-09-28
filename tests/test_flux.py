@@ -1,8 +1,10 @@
+
 import unittest
 
 from numpy import pi, ones
 from numpy.testing import assert_allclose
 from fdfdpy import Simulation
+
 
 class Test_Flux(unittest.TestCase):
 
