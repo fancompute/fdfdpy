@@ -362,9 +362,7 @@ class Simulation:
             vmax = np.abs(field_diff).max()
         vmin = -vmax
 
-        cmap = "Magma"
-
-        return plt_base(field_diff, outline_val, 'magma', vmin, vmax,
+        return plt_base(field_diff, outline_val, 'RdYlBu', vmin, vmax,
                         self.pol, cbar=cbar, outline=outline, ax=ax)
 
     def plt_eps(self, cbar=True, outline=True, ax=None, tiled_y=1):
