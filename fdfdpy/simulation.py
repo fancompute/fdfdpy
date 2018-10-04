@@ -333,6 +333,40 @@ class Simulation:
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
                         cbar=cbar, outline=outline, ax=ax)
 
+    def plt_diff(self, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1,
+                 normalize=True):
+        """ Plots the difference between |E| and |E_nl|"""
+
+        # solve the fields
+        (_, _, Ez) = self.solve_fields()
+        (_, _, Ez_nl, _) = self.solve_fields_nl()
+
+        # get the outline value 
+        eps_r = self.eps_r
+        eps_r = np.hstack(tiled_y*[eps_r])
+        outline_val = np.abs(eps_r)
+
+        # get the fields and tile them
+        field_lin = np.abs(Ez)
+        field_lin = np.hstack(tiled_y*[field_lin])
+        field_nl = np.abs(Ez_nl)
+        field_nl = np.hstack(tiled_y*[field_nl])
+
+        # take the difference, normalize by the max E_lin field if desired
+        field_diff = field_lin - field_nl
+        if normalize:
+            field_diff = field_diff/np.abs(field_lin).max()
+
+        # set limits
+        if vmax is None:
+            vmax = np.abs(field_diff).max()
+        vmin = -vmax
+
+        cmap = "Magma"
+
+        return plt_base(field_diff, outline_val, 'magma', vmin, vmax,
+                        self.pol, cbar=cbar, outline=outline, ax=ax)
+
     def plt_eps(self, cbar=True, outline=True, ax=None, tiled_y=1):
         # plot the permittivity distribution
 
