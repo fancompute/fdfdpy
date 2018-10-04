@@ -341,7 +341,7 @@ class Simulation:
         (_, _, Ez) = self.solve_fields()
         (_, _, Ez_nl, _) = self.solve_fields_nl()
 
-        # get the outline value 
+        # get the outline value
         eps_r = self.eps_r
         eps_r = np.hstack(tiled_y*[eps_r])
         outline_val = np.abs(eps_r)
