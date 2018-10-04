@@ -54,17 +54,10 @@ class mode:
         simulation_norm.solve_fields()
         W_in = simulation_norm.flux_probe(self.direction_normal, new_center, self.width)
 
-        if self.direction_normal == "x":
-            inds_x = [new_center[0], new_center[0]+1]
-            inds_y = [int(new_center[1]-self.width/2), int(new_center[1]+self.width/2)]
-        elif self.direction_normal == "y":
-            inds_x = [int(new_center[0]-self.width/2), int(new_center[0]+self.width/2)]
-            inds_y = [new_center[1], new_center[1]+1]
-
         # save this value in the original simulation
         simulation.W_in = W_in
         simulation.E2_in = np.sum(np.square(np.abs(
-                        simulation_norm.fields['Ez'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1])))
+                        simulation_norm.fields['Ez']))*np.abs(simulation_norm.src))
 
     def insert_mode(self, simulation, destination, matrix_format=DEFAULT_MATRIX_FORMAT):
         EPSILON_0_ = EPSILON_0*simulation.L0
