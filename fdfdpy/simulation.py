@@ -98,6 +98,15 @@ class Simulation:
         self.derivs = derivs
         self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
 
+    def compute_index_shift(self):
+        """ Computes array of nonlinear refractive index shift"""
+
+        _ = self.solve_fields()
+        _ = self.solve_fields_nl()
+        index_nl = np.sqrt(np.real(self.eps_r + self.eps_nl))
+        index_lin = np.sqrt(np.real(self.eps_r))
+        return np.abs(index_nl - index_lin)
+
     def solve_fields(self, include_nl=False, timing=False, averaging=True, solver=DEFAULT_SOLVER,
                      matrix_format=DEFAULT_MATRIX_FORMAT):
         # performs direct solve for A given source
