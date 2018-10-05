@@ -322,6 +322,38 @@ class Simulation:
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
                         cbar=cbar, outline=outline, ax=ax)
 
+    def init_design_region(self, design_region, eps_m, style='clean'):
+
+        allowed = {'full', 'empty', 'halfway', 'random'}
+
+        if style == 'full':
+            # eps_m filled in design region
+            eps_full = eps_m * np.ones(self.eps_r.shape)
+            eps_full[design_region == 0] = self.eps_r[design_region == 0]
+            self.eps_r = eps_full
+
+        elif style == 'halfway':
+            # halfway between 1 and eps_m in design region
+            eps_halfway = self.eps_r
+            eps_halfway[design_region == 1] = eps_m/2 + 1/2
+            self.eps_r = eps_halfway
+
+        elif style == 'empty':
+            # nothing in design region
+            eps_empty = np.zeros(self.eps_r.shape)
+            eps_empty[design_region == 0] = self.eps_r[design_region == 0]
+            self.eps_r = eps_empty
+
+        elif style == 'random':
+            # random pixels in design region
+            eps_random = (eps_m-1)*np.random.random(self.eps_r.shape)+1
+            eps_random[design_region == 0] = self.eps_r[design_region == 0]
+            self.eps_r = eps_random
+
+        else:
+            raise ValueError("'style' must be one of {}".format(allowed))
+
+
     def plt_re(self, cbar=True, outline=True, ax=None, tiled_y=1):
         # plot np.real part of primary field (e.g. Ez/Hz)
 
