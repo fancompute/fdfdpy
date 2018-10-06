@@ -181,34 +181,25 @@ class Simulation:
         # solves for the nonlinear fields of the simulation.
 
         if self.pol == 'Ez':
-            # if born solver
             if solver_nl == 'born':
-
                 (Hx, Hy, Ez, conv_array) = born_solve(self, Estart,
                                                       conv_threshold,
                                                       max_num_iter,
                                                       averaging=averaging)
-
-            # if newton solver
             elif solver_nl == 'newton':
-
                 (Hx, Hy, Ez, conv_array) = newton_solve(self,
                                                         Estart, conv_threshold,
                                                         max_num_iter,
                                                         averaging=averaging)
-
             elif solver_nl == 'LM':
-
                 (Hx, Hy, Ez, conv_array) = LM_solve(self, Estart,
                                                     conv_threshold,
                                                     max_num_iter,
                                                     averaging=averaging)
-
             # incorrect solver_nl argument
             else:
                 raise AssertionError("solver must be one of "
                                      "{'born', 'newton', 'LM'}")
-
 
             # return final nonlinear fields and an array of the convergences
 
@@ -322,9 +313,8 @@ class Simulation:
         return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
                         cbar=cbar, outline=outline, ax=ax)
 
-    def init_design_region(self, design_region, eps_m, style='clean'):
-
-        allowed = {'full', 'empty', 'halfway', 'random'}
+    def init_design_region(self, design_region, eps_m, style=''):
+        """ Initializes the design_region permittivity depending on style"""
 
         if style == 'full':
             # eps_m filled in design region
@@ -350,12 +340,8 @@ class Simulation:
             eps_random[design_region == 0] = self.eps_r[design_region == 0]
             self.eps_r = eps_random
 
-        else:
-            raise ValueError("'style' must be one of {}".format(allowed))
-
-
     def plt_re(self, cbar=True, outline=True, ax=None, tiled_y=1):
-        # plot np.real part of primary field (e.g. Ez/Hz)
+        """ Plots the real part of primary field (e.g. Ez/Hz)"""
 
         eps_r = self.eps_r
         eps_r = np.hstack(tiled_y*[eps_r])
