@@ -187,8 +187,8 @@ class Simulation:
                                                       max_num_iter,
                                                       averaging=averaging)
             elif solver_nl == 'newton':
-                (Hx, Hy, Ez, conv_array) = newton_solve(self,
-                                                        Estart, conv_threshold,
+                (Hx, Hy, Ez, conv_array) = newton_solve(self, Estart,
+                                                        conv_threshold,
                                                         max_num_iter,
                                                         averaging=averaging)
             elif solver_nl == 'LM':
@@ -330,7 +330,7 @@ class Simulation:
 
         elif style == 'empty':
             # nothing in design region
-            eps_empty = np.zeros(self.eps_r.shape)
+            eps_empty = np.ones(self.eps_r.shape)
             eps_empty[design_region == 0] = self.eps_r[design_region == 0]
             self.eps_r = eps_empty
 
