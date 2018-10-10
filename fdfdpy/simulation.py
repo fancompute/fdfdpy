@@ -86,6 +86,7 @@ class Simulation:
         self.A = A
         self.derivs = derivs
         self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
+        self.fields_nl = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
 
     def reset_eps(self, new_eps):
         # in here for compatibility for now..
@@ -97,6 +98,7 @@ class Simulation:
         self.A = A
         self.derivs = derivs
         self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
+        self.fields_nl = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
 
     def compute_index_shift(self):
         """ Computes array of nonlinear refractive index shift"""
@@ -150,9 +152,10 @@ class Simulation:
             Ey = ey.reshape((Nx, Ny))
             Hz = X.reshape((Nx, Ny))
 
-            self.fields['Ex'] = Ex
-            self.fields['Ey'] = Ey
-            self.fields['Hz'] = Hz
+            if include_nl==False:
+                self.fields['Ex'] = Ex
+                self.fields['Ey'] = Ey
+                self.fields['Hz'] = Hz
 
             return (Ex, Ey, Hz)
 
@@ -164,9 +167,10 @@ class Simulation:
             Hy = hy.reshape((Nx, Ny))
             Ez = X.reshape((Nx, Ny))
 
-            self.fields['Hx'] = Hx
-            self.fields['Hy'] = Hy
-            self.fields['Ez'] = Ez
+            if include_nl==False:
+                self.fields['Hx'] = Hx
+                self.fields['Hy'] = Hy
+                self.fields['Ez'] = Ez
 
             return (Hx, Hy, Ez)
 
@@ -203,9 +207,9 @@ class Simulation:
 
             # return final nonlinear fields and an array of the convergences
 
-            self.fields['Hx'] = Hx
-            self.fields['Hy'] = Hy
-            self.fields['Ez'] = Ez
+            self.fields_nl['Hx'] = Hx
+            self.fields_nl['Hy'] = Hy
+            self.fields_nl['Ez'] = Ez
 
             return (Hx, Hy, Ez, conv_array)
 
@@ -233,9 +237,9 @@ class Simulation:
 
             # return final nonlinear fields and an array of the convergences
 
-            self.fields['Ex'] = Ex
-            self.fields['Ey'] = Ey
-            self.fields['Hz'] = Hz
+            self.fields_nl['Ex'] = Ex
+            self.fields_nl['Ey'] = Ey
+            self.fields_nl['Hz'] = Hz
 
             return (Ex, Ey, Hz, conv_array)
 
@@ -290,7 +294,7 @@ class Simulation:
                 Sy = -1/2*np.real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
                 return self.dl*np.sum(Sy)
 
-    def plt_abs(self, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
+    def plt_abs(self, nl=False, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
         # plot np.absolute value of primary field (e.g. Ez/Hz)
 
         if self.fields[self.pol] is None:
@@ -299,7 +303,11 @@ class Simulation:
         eps_r = self.eps_r
         eps_r = np.hstack(tiled_y*[eps_r])
 
-        field_val = np.abs(self.fields[self.pol])
+        if nl:
+            field_val = np.abs(self.fields_nl[self.pol])
+        else:
+            field_val = np.abs(self.fields[self.pol])
+
         field_val = np.hstack(tiled_y*[field_val])
 
         outline_val = np.abs(eps_r)
@@ -340,7 +348,7 @@ class Simulation:
             eps_random[design_region == 0] = self.eps_r[design_region == 0]
             self.eps_r = eps_random
 
-    def plt_re(self, cbar=True, outline=True, ax=None, tiled_y=1):
+    def plt_re(self, nl=False, cbar=True, outline=True, ax=None, tiled_y=1):
         """ Plots the real part of primary field (e.g. Ez/Hz)"""
 
         eps_r = self.eps_r
@@ -349,7 +357,11 @@ class Simulation:
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
-        field_val = np.real(self.fields[self.pol])
+        if nl:
+            field_val = np.abs(self.fields_nl[self.pol])
+        else:
+            field_val = np.abs(self.fields[self.pol])
+
         field_val = np.hstack(tiled_y*[field_val])
 
         outline_val = np.abs(eps_r)
@@ -364,19 +376,15 @@ class Simulation:
                  normalize=True):
         """ Plots the difference between |E| and |E_nl|"""
 
-        # solve the fields
-        (_, _, Ez) = self.solve_fields()
-        (_, _, Ez_nl, _) = self.solve_fields_nl()
-
         # get the outline value
         eps_r = self.eps_r
         eps_r = np.hstack(tiled_y*[eps_r])
         outline_val = np.abs(eps_r)
 
         # get the fields and tile them
-        field_lin = np.abs(Ez)
+        field_lin = np.abs(self.fields['Ez'])
         field_lin = np.hstack(tiled_y*[field_lin])
-        field_nl = np.abs(Ez_nl)
+        field_nl = np.abs(self.fields_nl['Ez'])
         field_nl = np.hstack(tiled_y*[field_nl])
 
         # take the difference, normalize by the max E_lin field if desired
