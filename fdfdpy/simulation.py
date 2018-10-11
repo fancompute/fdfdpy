@@ -257,7 +257,7 @@ class Simulation:
 
         # to do, check for correct types as well.
 
-    def flux_probe(self, direction_normal, center, width):
+    def flux_probe(self, direction_normal, center, width, nl=False):
         # computes the total flux across the plane (line in 2D) defined by direction_normal, center, width
 
         # first extract the slice of the permittivity
@@ -271,27 +271,47 @@ class Simulation:
             raise ValueError("The value of direction_normal is neither x nor y!")
 
         if self.pol == 'Ez':
-            Ez_x = grid_average(self.fields['Ez'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1,:-1]
-            Ez_y = grid_average(self.fields['Ez'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1,:-1]
+
+            if nl:
+                field_val_Ez = self.fields_nl['Ez']
+                field_val_Hy = self.fields_nl['Hy']
+                field_val_Hx = self.fields_nl['Hx']
+            else:
+                field_val_Ez = self.fields['Ez']
+                field_val_Hy = self.fields['Hy']
+                field_val_Hx = self.fields['Hx']
+
+            Ez_x = grid_average(field_val_Ez[inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1,:-1]
+            Ez_y = grid_average(field_val_Ez[inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1,:-1]
             # NOTE: Last part drops the extra rows/cols used for grid_average
 
             if direction_normal == "x":
-                Sx = -1/2*np.real(Ez_x*np.conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+                Sx = -1/2*np.real(Ez_x*np.conj(field_val_Hy[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
                 return self.dl*np.sum(Sx)
             elif direction_normal == "y":
-                Sy = 1/2*np.real(Ez_y*np.conj(self.fields['Hy'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
+                Sy = 1/2*np.real(Ez_y*np.conj(field_val_Hx[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]))
                 return self.dl*np.sum(Sy)
 
         elif self.pol == 'Hz':
-            Hz_x = grid_average(self.fields['Hz'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1, :-1]
-            Hz_y = grid_average(self.fields['Hz'][inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1, :-1]
+
+            if nl:
+                field_val_Hz = self.fields_nl['Hz']
+                field_val_Ey = self.fields_nl['Ey']
+                field_val_Ex = self.fields_nl['Ex']
+            else:
+                field_val_Hz = self.fields['Hz']
+                field_val_Ey = self.fields['Ey']
+                field_val_Ex = self.fields['Ex']
+
+            Hz_x = grid_average(field_val_Hz[inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'x')[:-1, :-1]
+            Hz_y = grid_average(field_val_Hz[inds_x[0]:inds_x[1]+1, inds_y[0]:inds_y[1]+1], 'y')[:-1, :-1]
             # NOTE: Last part drops the extra rows/cols used for grid_average
 
             if direction_normal == "x":
-                Sx = 1/2*np.real(self.fields['Ey'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_x))
+                Sx = 1/2*np.real(field_val_Ey[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_x))
                 return self.dl*np.sum(Sx)
             elif direction_normal == "y":
-                Sy = -1/2*np.real(self.fields['Ex'][inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
+                Sy = -1/2*np.real(field_val_Ex[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
                 return self.dl*np.sum(Sy)
 
     def plt_abs(self, nl=False, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
