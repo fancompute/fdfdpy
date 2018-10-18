@@ -10,6 +10,7 @@ from fdfdpy.source.mode import mode
 from fdfdpy.nonlinearity import Nonlinearity
 from fdfdpy.constants import (DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT,
                               DEFAULT_SOLVER, EPSILON_0, MU_0)
+from filter import eps2rho
 
 
 class Simulation:
@@ -314,33 +315,6 @@ class Simulation:
                 Sy = -1/2*np.real(field_val_Ex[inds_x[0]:inds_x[1], inds_y[0]:inds_y[1]]*np.conj(Hz_y))
                 return self.dl*np.sum(Sy)
 
-    def plt_abs(self, nl=False, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
-        # plot np.absolute value of primary field (e.g. Ez/Hz)
-
-        if self.fields[self.pol] is None:
-            raise ValueError("need to solve the simulation first")
-
-        eps_r = self.eps_r
-        eps_r = np.hstack(tiled_y*[eps_r])
-
-        if nl:
-            field_val = np.abs(self.fields_nl[self.pol])
-        else:
-            field_val = np.abs(self.fields[self.pol])
-
-        field_val = np.hstack(tiled_y*[field_val])
-
-        outline_val = np.abs(eps_r)
-        vmin = 0.0
-
-        if vmax is None:
-            vmax = field_val.max()
-
-        cmap = "magma"
-
-        return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
-                        cbar=cbar, outline=outline, ax=ax)
-
     def init_design_region(self, design_region, eps_m, style=''):
         """ Initializes the design_region permittivity depending on style"""
 
@@ -367,6 +341,35 @@ class Simulation:
             eps_random = (eps_m-1)*np.random.random(self.eps_r.shape)+1
             eps_random[design_region == 0] = self.eps_r[design_region == 0]
             self.eps_r = eps_random
+
+        self.rho = eps2rho(self.eps_r, eps_m)
+
+    def plt_abs(self, nl=False, cbar=True, outline=True, ax=None, vmax=None, tiled_y=1):
+        # plot np.absolute value of primary field (e.g. Ez/Hz)
+
+        if self.fields[self.pol] is None:
+            raise ValueError("need to solve the simulation first")
+
+        eps_r = self.eps_r
+        eps_r = np.hstack(tiled_y*[eps_r])
+
+        if nl:
+            field_val = np.abs(self.fields_nl[self.pol])
+        else:
+            field_val = np.abs(self.fields[self.pol])
+
+        field_val = np.hstack(tiled_y*[field_val])
+
+        outline_val = np.abs(eps_r)
+        vmin = 0.0
+
+        if vmax is None:
+            vmax = field_val.max()
+
+        cmap = "magma"
+
+        return plt_base(field_val, outline_val, cmap, vmin, vmax, self.pol,
+                        cbar=cbar, outline=outline, ax=ax)
 
     def plt_re(self, nl=False, cbar=True, outline=True, ax=None, tiled_y=1):
         """ Plots the real part of primary field (e.g. Ez/Hz)"""

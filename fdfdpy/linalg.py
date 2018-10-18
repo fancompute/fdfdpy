@@ -157,7 +157,7 @@ def solver_complex2real(A11, A12, b, timing=False, solver=DEFAULT_SOLVER):
     N = b.size
 
     if not b.any():
-        return zeros(b.shape)
+        return np.zeros(b.shape)
 
     b_re = np.real(b).astype(np.float64)
     b_im = np.imag(b).astype(np.float64)
