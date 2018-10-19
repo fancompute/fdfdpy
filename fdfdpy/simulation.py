@@ -31,6 +31,7 @@ class Simulation:
         self.Ny = Ny
         self.mu_r = np.ones((self.Nx, self.Ny))
         self.src = np.zeros((self.Nx, self.Ny))
+
         self.xrange = [0, float(Nx*self.dl)]
         self.yrange = [0, float(Ny*self.dl)]
 
@@ -84,18 +85,6 @@ class Simulation:
                                   self.eps_r, self.NPML, self.pol, self.L0,
                                   matrix_format=DEFAULT_MATRIX_FORMAT,
                                   timing=False)
-        self.A = A
-        self.derivs = derivs
-        self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
-        self.fields_nl = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
-
-    def reset_eps(self, new_eps):
-        # in here for compatibility for now..
-
-        self.eps_r = new_eps
-        (A, derivs) = construct_A(self.omega, self.xrange, self.yrange, self.eps_r, self.NPML, self.pol, self.L0,
-                                matrix_format=DEFAULT_MATRIX_FORMAT,
-                                timing=False)
         self.A = A
         self.derivs = derivs
         self.fields = {f: None for f in ['Ex', 'Ey', 'Ez', 'Hx', 'Hy', 'Hz']}
