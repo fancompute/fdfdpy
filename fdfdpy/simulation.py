@@ -10,7 +10,7 @@ from fdfdpy.source.mode import mode
 from fdfdpy.nonlinearity import Nonlinearity
 from fdfdpy.constants import (DEFAULT_LENGTH_SCALE, DEFAULT_MATRIX_FORMAT,
                               DEFAULT_SOLVER, EPSILON_0, MU_0)
-from filter import eps2rho
+from fdfdpy.optimize.filter import eps2rho
 
 
 class Simulation:
@@ -328,6 +328,14 @@ class Simulation:
         elif style == 'random':
             # random pixels in design region
             eps_random = (eps_m-1)*np.random.random(self.eps_r.shape)+1
+            eps_random[design_region == 0] = self.eps_r[design_region == 0]
+            self.eps_r = eps_random
+
+        elif style == 'random_sym':
+            # random pixels in design region
+            R = np.random.random(self.eps_r.shape)
+            R_sym = 1/2*(np.fliplr(R) + R)
+            eps_random = (eps_m-1)*R_sym+1
             eps_random[design_region == 0] = self.eps_r[design_region == 0]
             self.eps_r = eps_random
 
