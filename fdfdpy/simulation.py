@@ -332,7 +332,7 @@ class Simulation:
             self.eps_r = eps_random
 
         elif style == 'random_sym':
-            # random pixels in design region
+            # random pixels in design region.  Symmetric across y=0
             R = np.random.random(self.eps_r.shape)
             R_sym = 1/2*(np.fliplr(R) + R)
             eps_random = (eps_m-1)*R_sym+1
@@ -347,7 +347,7 @@ class Simulation:
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
-        eps_r = self.eps_r
+        eps_r = deepcopy(self.eps_r)
         eps_r = np.hstack(tiled_y*[eps_r])
 
         if nl:
@@ -371,16 +371,16 @@ class Simulation:
     def plt_re(self, nl=False, cbar=True, outline=True, ax=None, tiled_y=1):
         """ Plots the real part of primary field (e.g. Ez/Hz)"""
 
-        eps_r = self.eps_r
+        eps_r = deepcopy(self.eps_r)
         eps_r = np.hstack(tiled_y*[eps_r])
 
         if self.fields[self.pol] is None:
             raise ValueError("need to solve the simulation first")
 
         if nl:
-            field_val = np.abs(self.fields_nl[self.pol])
+            field_val = np.real(self.fields_nl[self.pol])
         else:
-            field_val = np.abs(self.fields[self.pol])
+            field_val = np.real(self.fields[self.pol])
 
         field_val = np.hstack(tiled_y*[field_val])
 
@@ -397,7 +397,7 @@ class Simulation:
         """ Plots the difference between |E| and |E_nl|"""
 
         # get the outline value
-        eps_r = self.eps_r
+        eps_r = deepcopy(self.eps_r)
         eps_r = np.hstack(tiled_y*[eps_r])
         outline_val = np.abs(eps_r)
 
@@ -423,7 +423,7 @@ class Simulation:
     def plt_eps(self, cbar=True, outline=True, ax=None, tiled_y=1):
         # plot the permittivity distribution
 
-        eps_r = self.eps_r
+        eps_r = deepcopy(self.eps_r)
         eps_r = np.hstack(tiled_y*[eps_r])
 
         eps_val = np.abs(eps_r)
